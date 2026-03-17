@@ -12,9 +12,11 @@
  Summary: BindTimer with two states (idle and running) tracks time of each session (from start to stop), updates history list after every bind session, constantly calculates total time passed (as well as fraction of time passed vs time limit) for todays date, and sends notifications when a time limit is reached
  
  To Update:
- - notifications only send when you are not on the app (ie when you stay on the app page then check phone notifications later there will be none)
+ - notifications only send when you are not on the app (ie when you stay on the app page then check phone notifications later there will be none) -> this
  - the fraction passed stays consistent when the app is open (goes from zero to 1 and stops at 1), but when not on app screen for entire time it goes past 1 (might have fixed check if i have)
  - need to consider behavior at midnight, will it be appended with previous days date or split into two different bind sessions?
+ - do we want the ability to delete entries if there is a glitch?
+ - use swift data to have data persistance (make the test functionality so that theres an entry box for simulating data as well with entrie spots for # days previous to today, # seconds passed, # start time?)
  */
 
 import Foundation
@@ -36,7 +38,7 @@ struct BindSession: Identifiable, Equatable {
 /*
  calculates properties -> how much time passed and left in time limit (seconds value and formated strings hh:mm:ss), fraction of time passed vs time limit
  public methods -> start(), stop()
- public varaibles -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, BindTimerState
+ public varaibles -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
  private methods -> _createTimer(), _killTimer(), _onTick(), _formatSeconds(_ seconds:Int), _totalSeconds(on day: Date)
  */
 @Observable // declares everything publically accessible in class acts as state var

@@ -105,3 +105,6 @@ struct UIDemo1: View {
         newTimeDate = ""
     }
 }
+#Preview {
+    UIDemo1()
+}

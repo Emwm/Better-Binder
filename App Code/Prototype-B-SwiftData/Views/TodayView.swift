@@ -1,29 +1,34 @@
 //
-//  mvp1.swift
-//  PrototypeA
+//  TodayView.swift
+//  Prototype-B-SwiftData
 //
-//  Created by Reese Brogden on 3/10/26.
+//  Created by Reese Brogden on 3/16/26.
 //
 
 /*
  the goal of this file is to create a minimum viable prototype (mvp) that has timer functionality and ui
  functionality: time binded today (with visual graphic of fraction of time passed/time limit, totaled time value, and list view of binds for that day)
                 previous binds (list of all previous binds not including todays date)
+ 
+public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindTimerState, secondsPassedThisBind
+
+ access public variables like timer.secondsPassedToday
+
+ the @State means mvp1 owns this timer and only one timer is created in this view, could change later if need to change what owns this timer
+ 
  */
 
 import SwiftUI
 import Foundation
+import SwiftData
 
-struct mvp1: View {
-    // state properties here -----------------------------------
-    
-    // create instance of timer
-    @State private var timer: BindTimer = BindTimer()
-    // public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindTimerState, secondsPassedThisBind
-    // access public variables like timer.secondsPassedToday
-    // the @State means mvp1 owns this timer and only one timer is created in this view, could change later if need to change what owns this timer
+struct TodayView: View {
+    @State private var timer: BindTimer = BindTimer(modelContext: )
+    @State private var sessions: [BindSessionModel] = []
     
     var body: some View {
+        // lazy initialization (initialized the first time the view renders)
+        
         VStack{
             // Time Binded Today ----------------------------
             Text("Time Binding Today")
@@ -87,11 +92,12 @@ struct mvp1: View {
                 .padding(.top, 10)
             
             // list of times
-            List{
-                ForEach(timer.bindSessionHistory){ historyList in
-                    HStack{
-                        Text("\(historyList.startDate)")
-                        Text("\(historyList.durationSeconds)s")
+            
+            List {
+                ForEach(sessions) { session in
+                    VStack(alignment: .leading) {
+                        Text(session.startDate.formatted())
+                        Text("\(session.durationSeconds) seconds")
                     }
                 }
             }
@@ -105,7 +111,3 @@ struct mvp1: View {
         }
     }
 }
-#Preview {
-    mvp1()
-}
-
