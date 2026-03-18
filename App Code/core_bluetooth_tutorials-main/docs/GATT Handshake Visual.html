@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The GATT Handshake</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0A0E27;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Source Sans 3', Georgia, serif;
+  }
+  canvas { display: block; }
+  .controls {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+  }
+  .controls button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #ccc;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .controls button:hover {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div class="controls">
+  <button id="playPauseBtn">▶ Play</button>
+  <button id="replayBtn">↺ Replay</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+const DURATION = 34;
+const BG = '#0A0E27';
+
+const IOS_BLUE = '#58C4DD';
+const IOS_BG = 'rgba(88,196,221,0.05)';
+const ESP_GREEN = '#34C759';
+const ESP_BG = 'rgba(52,199,89,0.05)';
+const PURPLE = '#7B68EE';
+const ORANGE = '#FF9500';
+const WHITE = '#E8E8E8';
+const SUBTLE = 'rgba(255,255,255,0.4)';
+const UUID_COLOR = '#FF6B9D';
+
+function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+function easeOutCubic(t) { return 1 - Math.pow(1-t, 3); }
+function easeInCubic(t) { return t*t*t; }
+function easeOutBack(t) { const c = 1.7; return 1 + (c+1)*Math.pow(t-1,3) + c*Math.pow(t-1,2); }
+function clamp01(t) { return Math.max(0, Math.min(1, t)); }
+function lerp(a, b, t) { return a + (b-a)*t; }
+function fadeIn(time, start, dur) { return clamp01((time - start) / dur); }
+
+let startTime = null, playing = false, paused = false, animTime = 0, pausedAt = 0;
+
+// ─── Drawing Helpers ───
+
+function drawText(text, x, y, size, color, alpha, align='center', weight='300') {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.font = `${weight} ${size}px 'Source Sans 3', Georgia, serif`;
+  ctx.fillText(text, x, y); ctx.restore();
+}
+
+function drawCode(text, x, y, size, color, alpha, align='center') {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.font = `400 ${size}px 'Courier New', monospace`;
+  ctx.fillText(text, x, y); ctx.restore();
+}
+
+function fillRRect(x, y, w, h, r, color, alpha) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); ctx.restore();
+}
+
+function strokeRRect(x, y, w, h, r, color, alpha, lw=1.5) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.stroke(); ctx.restore();
+}
+
+function drawDashedLine(x1, y1, x2, y2, progress, color, alpha, lw=2, dash=[6,4]) {
+  if (alpha <= 0.001 || progress <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color;
+  ctx.lineWidth = lw; ctx.setLineDash(dash); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(lerp(x1,x2,progress), lerp(y1,y2,progress));
+  ctx.stroke(); ctx.restore();
+}
+
+function drawSolidLine(x1, y1, x2, y2, progress, color, alpha, lw=2.5) {
+  if (alpha <= 0.001 || progress <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color;
+  ctx.lineWidth = lw; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(lerp(x1,x2,progress), lerp(y1,y2,progress));
+  ctx.stroke(); ctx.restore();
+}
+
+function drawArrowHead(x, y, angle, size, color, alpha) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.translate(x, y); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0, 0);
+  ctx.lineTo(-size, -size * 0.5); ctx.lineTo(-size, size * 0.5);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+function drawGlowCircle(x, y, r, color, alpha) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha;
+  const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+  grad.addColorStop(0, color); grad.addColorStop(0.5, color + '66');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill(); ctx.restore();
+}
+
+function drawNodeBox(x, y, w, h, label, borderColor, alpha, highlight=0, fontSize=12) {
+  if (alpha <= 0.001) return;
+  const bx = x - w/2, by = y - h/2;
+  fillRRect(bx, by, w, h, 7, BG, alpha);
+  strokeRRect(bx, by, w, h, 7, borderColor, alpha * (0.5 + highlight * 0.5), 1.5 + highlight);
+  if (highlight > 0) {
+    strokeRRect(bx - 3, by - 3, w + 6, h + 6, 10, borderColor, alpha * highlight * 0.2, 1);
+  }
+  drawCode(label, x, y, fontSize, borderColor, alpha, 'center');
+}
+
+// ─── Main Render ───
+function render(t) {
+  const w = W(), h = H();
+  // Scale based on viewport but cap so things stay large
+  const sc = Math.min(w / 1000, h / 680) * 0.95;
+  const cx = w / 2, cy = h / 2;
+
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid dots
+  ctx.save(); ctx.globalAlpha = 0.03; ctx.fillStyle = '#fff';
+  const gs = 44 * sc;
+  for (let gx = gs; gx < w; gx += gs)
+    for (let gy = gs; gy < h; gy += gs) {
+      ctx.beginPath(); ctx.arc(gx, gy, 0.8, 0, Math.PI*2); ctx.fill();
+    }
+  ctx.restore();
+
+  // ── Layout ──
+  // Generous sizes
+  const nodeW = 220 * sc;
+  const nodeH = 42 * sc;
+  const nodeFontSize = 13 * sc;
+  const rowGap = 72 * sc;  // generous vertical gap between rows
+  const colGap = 340 * sc; // wide gap between columns for labels
+
+  const iosX = cx - colGap / 2;
+  const espX = cx + colGap / 2;
+
+  // Diagram is centered vertically but shifted up a bit to leave room for subtitle
+  const diagramCenterY = cy - 30 * sc;
+  const topY = diagramCenterY - 1.4 * rowGap;
+
+  const rows = [topY, topY + rowGap, topY + rowGap * 2, topY + rowGap * 3];
+
+  // Subtitle zone — well below the lowest row
+  const subtitleY = rows[3] + nodeH/2 + 55 * sc;
+
+  // Node labels
+  const iosLabels = ['CBPeripheral', 'CBService', 'CBCharacteristic', 'CBCharacteristic'];
+  const iosSubs   = ['',             '',          '(Write)',          '(Notify)'];
+  const espLabels = ['BLEServer', 'BLEService', 'BLECharacteristic', 'BLECharacteristic'];
+  const espSubs   = ['',           '',           '(CMD)',             '(Status)'];
+
+  // Connection endpoints
+  const iosRight = iosX + nodeW / 2;
+  const espLeft  = espX - nodeW / 2;
+  const midX = (iosRight + espLeft) / 2;
+  const labelGap = 28 * sc; // how far above/below the connection line the step label sits
+
+  // ══════════════════════════════════════════════
+  // PHASE 0 (0–3.5s): Title
+  // ══════════════════════════════════════════════
+
+  const titleIn = easeOutCubic(fadeIn(t, 0.3, 1.2));
+  const titleOut = easeInCubic(fadeIn(t, 3.0, 0.8));
+  const titleA = titleIn * (1 - titleOut);
+  drawText('The GATT Handshake', cx, cy - 18 * sc, 32 * sc, WHITE, titleA, 'center', '600');
+  drawText('CoreBluetooth  ↔  ESP32', cx, cy + 25 * sc, 17 * sc, SUBTLE, titleA * 0.65, 'center', '300');
+
+  // ══════════════════════════════════════════════
+  // PHASE 1 (3.5–7s): Columns appear
+  // ══════════════════════════════════════════════
+
+  const colStart = 4.0;
+
+  // Group boxes
+  const gpx = 25 * sc, gpTop = 35 * sc, gpBot = 20 * sc;
+  const groupW = nodeW + gpx * 2;
+  const groupH = (rows[3] - rows[0]) + nodeH + gpTop + gpBot;
+  const groupY = rows[0] - nodeH/2 - gpTop;
+
+  const iosGA = easeOutCubic(fadeIn(t, colStart, 1.0));
+  const espGA = easeOutCubic(fadeIn(t, colStart + 0.4, 1.0));
+
+  if (iosGA > 0) {
+    fillRRect(iosX - groupW/2, groupY, groupW, groupH, 12, IOS_BG, iosGA);
+    strokeRRect(iosX - groupW/2, groupY, groupW, groupH, 12, IOS_BLUE, iosGA * 0.2, 1);
+    drawText('iOS App (CoreBluetooth)', iosX, groupY + 18 * sc, 12 * sc, IOS_BLUE, iosGA * 0.55, 'center', '600');
+  }
+  if (espGA > 0) {
+    fillRRect(espX - groupW/2, groupY, groupW, groupH, 12, ESP_BG, espGA);
+    strokeRRect(espX - groupW/2, groupY, groupW, groupH, 12, ESP_GREEN, espGA * 0.2, 1);
+    drawText('ESP32 (Arduino BLE)', espX, groupY + 18 * sc, 12 * sc, ESP_GREEN, espGA * 0.55, 'center', '600');
+  }
+
+  // ── Nodes stagger in ──
+  // Timeline for step highlights
+  const stepRanges = [
+    [8, 12],    // step 1 → row 0
+    [13, 17],   // step 2 → row 1
+    [18, 22],   // step 3a → row 2
+    [23, 27],   // step 3b → row 3
+  ];
+
+  for (let i = 0; i < 4; i++) {
+    const iosStart = colStart + 1.0 + i * 0.5;
+    const espStart = colStart + 1.4 + i * 0.5;
+    const iosA = easeOutBack(clamp01(fadeIn(t, iosStart, 0.6)));
+    const espA = easeOutBack(clamp01(fadeIn(t, espStart, 0.6)));
+
+    // Highlight during active step
+    let hl = 0;
+    const [hStart, hEnd] = stepRanges[i];
+    if (t >= hStart && t < hEnd) hl = easeOutCubic(fadeIn(t, hStart, 0.4)) * 0.6;
+
+    // Build the label: main + sub on same line
+    const iosLabel = iosLabels[i] + (iosSubs[i] ? ' ' + iosSubs[i] : '');
+    const espLabel = espLabels[i] + (espSubs[i] ? ' ' + espSubs[i] : '');
+
+    drawNodeBox(iosX, rows[i], nodeW, nodeH, iosLabel, IOS_BLUE, iosA, hl, nodeFontSize);
+    drawNodeBox(espX, rows[i], nodeW, nodeH, espLabel, ESP_GREEN, espA, hl, nodeFontSize);
+  }
+
+  // Vertical hierarchy lines
+  const hierA = easeOutCubic(fadeIn(t, colStart + 3.0, 0.8));
+  if (hierA > 0) {
+    for (let i = 0; i < 3; i++) {
+      const y1 = rows[i] + nodeH/2;
+      const y2 = rows[i+1] - nodeH/2;
+      drawSolidLine(iosX, y1, iosX, y2, 1, IOS_BLUE, hierA * 0.12, 1);
+      drawSolidLine(espX, y1, espX, y2, 1, ESP_GREEN, hierA * 0.12, 1);
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // PHASE 2 (8–12s): Step 1 — Connects to
+  // ══════════════════════════════════════════════
+
+  const s1 = 8.0;
+  const s1Line = easeInOutCubic(fadeIn(t, s1 + 0.3, 1.2));
+  const s1A = easeOutCubic(fadeIn(t, s1, 0.5));
+  const s1La = easeOutCubic(fadeIn(t, s1 + 0.8, 0.6));
+
+  drawDashedLine(iosRight, rows[0], espLeft, rows[0], s1Line, IOS_BLUE, s1A * 0.65, 2 * sc, [7*sc, 5*sc]);
+  if (s1Line > 0.95) drawArrowHead(espLeft, rows[0], 0, 9*sc, IOS_BLUE, s1A * 0.6);
+
+  // Label centered above the line
+  drawText('1. Connects to', midX, rows[0] - labelGap, 14 * sc, WHITE, s1La * 0.8, 'center', '400');
+
+  // Subtitle
+  const sub1 = easeOutCubic(fadeIn(t, s1 + 0.5, 0.7)) * (1 - easeInCubic(fadeIn(t, 11.5, 0.6)));
+  drawText('The "session" layer — CBPeripheral represents the connected BLEServer',
+    cx, subtitleY, 13 * sc, SUBTLE, sub1 * 0.55, 'center', '300 italic');
+
+  // Traveling dot
+  if (s1Line > 0.01 && s1Line < 0.99) {
+    drawGlowCircle(lerp(iosRight, espLeft, s1Line), rows[0], 8*sc, IOS_BLUE, s1A * 0.8);
+  }
+
+  // ══════════════════════════════════════════════
+  // PHASE 3 (13–17s): Step 2 — Discovers
+  // ══════════════════════════════════════════════
+
+  const s2 = 13.0;
+  const s2Line = easeInOutCubic(fadeIn(t, s2 + 0.3, 1.2));
+  const s2A = easeOutCubic(fadeIn(t, s2, 0.5));
+  const s2La = easeOutCubic(fadeIn(t, s2 + 0.8, 0.6));
+
+  drawDashedLine(iosRight, rows[1], espLeft, rows[1], s2Line, IOS_BLUE, s2A * 0.65, 2 * sc, [7*sc, 5*sc]);
+  if (s2Line > 0.95) drawArrowHead(espLeft, rows[1], 0, 9*sc, IOS_BLUE, s2A * 0.6);
+
+  drawText('2. Discovers', midX, rows[1] - labelGap, 14 * sc, WHITE, s2La * 0.8, 'center', '400');
+
+  const sub2 = easeOutCubic(fadeIn(t, s2 + 0.5, 0.7)) * (1 - easeInCubic(fadeIn(t, 16.5, 0.6)));
+  drawText('.discoverServices() — first level of structural agreement',
+    cx, subtitleY, 13 * sc, SUBTLE, sub2 * 0.55, 'center', '300 italic');
+
+  if (s2Line > 0.01 && s2Line < 0.99) {
+    drawGlowCircle(lerp(iosRight, espLeft, s2Line), rows[1], 8*sc, IOS_BLUE, s2A * 0.8);
+  }
+
+  // ══════════════════════════════════════════════
+  // PHASE 4 (18–22s): Step 3a — Writes to (purple)
+  // ══════════════════════════════════════════════
+
+  const s3a = 18.0;
+  const s3aLine = easeInOutCubic(fadeIn(t, s3a + 0.3, 1.2));
+  const s3aA = easeOutCubic(fadeIn(t, s3a, 0.5));
+  const s3aLa = easeOutCubic(fadeIn(t, s3a + 0.8, 0.6));
+
+  drawSolidLine(iosRight, rows[2], espLeft, rows[2], s3aLine, PURPLE, s3aA * 0.75, 2.5 * sc);
+  if (s3aLine > 0.95) drawArrowHead(espLeft, rows[2], 0, 9*sc, PURPLE, s3aA * 0.65);
+
+  drawText('3a. Writes to', midX, rows[2] - labelGap, 14 * sc, WHITE, s3aLa * 0.8, 'center', '400');
+
+  const sub3a = easeOutCubic(fadeIn(t, s3a + 0.5, 0.7)) * (1 - easeInCubic(fadeIn(t, 21.5, 0.6)));
+  drawText('writeValue()  →  triggers onWrite callback on ESP32',
+    cx, subtitleY, 13 * sc, SUBTLE, sub3a * 0.55, 'center', '300 italic');
+
+  // Repeating data packets
+  if (t >= s3a + 1.0 && t < s3a + 3.5) {
+    const pt = t - s3a - 1.0;
+    const pp = (pt % 0.8) / 0.8;
+    const px = lerp(iosRight, espLeft, easeInOutCubic(pp));
+    drawGlowCircle(px, rows[2], 7*sc, PURPLE, Math.sin(pp * Math.PI) * 0.85 * s3aA);
+  }
+
+  // ══════════════════════════════════════════════
+  // PHASE 5 (23–27s): Step 3b — Notifies (orange, reverse)
+  // ══════════════════════════════════════════════
+
+  const s3b = 23.0;
+  const s3bLine = easeInOutCubic(fadeIn(t, s3b + 0.3, 1.2));
+  const s3bA = easeOutCubic(fadeIn(t, s3b, 0.5));
+  const s3bLa = easeOutCubic(fadeIn(t, s3b + 0.8, 0.6));
+
+  drawSolidLine(espLeft, rows[3], iosRight, rows[3], s3bLine, ORANGE, s3bA * 0.75, 2.5 * sc);
+  if (s3bLine > 0.95) drawArrowHead(iosRight, rows[3], Math.PI, 9*sc, ORANGE, s3bA * 0.65);
+
+  drawText('3b. Notifies', midX, rows[3] - labelGap, 14 * sc, WHITE, s3bLa * 0.8, 'center', '400');
+
+  const sub3b = easeOutCubic(fadeIn(t, s3b + 0.5, 0.7)) * (1 - easeInCubic(fadeIn(t, 26.5, 0.6)));
+  drawText('.notify()  →  triggers didUpdateValueFor on iOS',
+    cx, subtitleY, 13 * sc, SUBTLE, sub3b * 0.55, 'center', '300 italic');
+
+  if (t >= s3b + 1.0 && t < s3b + 3.5) {
+    const pt = t - s3b - 1.0;
+    const pp = (pt % 0.8) / 0.8;
+    const px = lerp(espLeft, iosRight, easeInOutCubic(pp));
+    drawGlowCircle(px, rows[3], 7*sc, ORANGE, Math.sin(pp * Math.PI) * 0.85 * s3bA);
+  }
+
+  // ══════════════════════════════════════════════
+  // PHASE 6 (28–32s): UUID Glue
+  // ══════════════════════════════════════════════
+
+  const uS = 28.0;
+  const uA = easeOutCubic(fadeIn(t, uS, 0.8)) * (1 - easeInCubic(fadeIn(t, 32.0, 1.0)));
+
+  if (uA > 0.001) {
+    const pulse = 0.5 + 0.5 * Math.sin((t - uS) * 2.5);
+
+    // SERVICE_UUID — centered between rows 1 nodes, below the connection line
+    const uuid1Y = rows[1] + labelGap * 0.6;
+    drawCode('SERVICE_UUID', midX, uuid1Y, 12 * sc, UUID_COLOR, uA * 0.75, 'center');
+    // Thin connecting lines from UUID label to each node
+    drawSolidLine(midX - 55*sc, uuid1Y, iosRight + 4*sc, rows[1], 1, UUID_COLOR, uA * 0.25 * pulse, 1);
+    drawSolidLine(midX + 55*sc, uuid1Y, espLeft - 4*sc, rows[1], 1, UUID_COLOR, uA * 0.25 * pulse, 1);
+
+    // CMD_CHAR_UUID — centered between rows 2 nodes
+    const u2A = easeOutCubic(fadeIn(t, uS + 1.0, 0.7)) * (1 - easeInCubic(fadeIn(t, 32.0, 1.0)));
+    const uuid2Y = rows[2] + labelGap * 0.6;
+    drawCode('CMD_CHAR_UUID', midX, uuid2Y, 12 * sc, UUID_COLOR, u2A * 0.75, 'center');
+    drawSolidLine(midX - 60*sc, uuid2Y, iosRight + 4*sc, rows[2], 1, UUID_COLOR, u2A * 0.22 * pulse, 1);
+    drawSolidLine(midX + 60*sc, uuid2Y, espLeft - 4*sc, rows[2], 1, UUID_COLOR, u2A * 0.22 * pulse, 1);
+
+    // Subtitle
+    const subU = easeOutCubic(fadeIn(t, uS + 0.5, 0.7)) * (1 - easeInCubic(fadeIn(t, 31.5, 0.7)));
+    drawText('UUIDs are the "glue" — both sides must agree on the exact same strings',
+      cx, subtitleY, 13 * sc, UUID_COLOR, subU * 0.5, 'center', '300 italic');
+  }
+
+  // ══════════════════════════════════════════════
+  // Final fade
+  // ══════════════════════════════════════════════
+
+  const fadeAll = t > 33.0 ? easeInCubic(clamp01((t - 33.0) / 0.8)) : 0;
+  if (fadeAll > 0) {
+    ctx.save(); ctx.globalAlpha = fadeAll; ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, w, h); ctx.restore();
+  }
+}
+
+// ─── Loop ───
+const btn = document.getElementById('playPauseBtn');
+function updateBtn() { btn.textContent = playing && !paused ? '⏸ Pause' : '▶ Play'; }
+
+function tick(ts) {
+  if (!playing || paused) return;
+  if (!startTime) startTime = ts - pausedAt * 1000;
+  animTime = (ts - startTime) / 1000;
+  if (animTime > DURATION + 0.5) { playing = false; paused = false; render(DURATION); updateBtn(); return; }
+  render(animTime);
+  requestAnimationFrame(tick);
+}
+
+function play() {
+  playing = true; paused = false; startTime = null;
+  updateBtn(); requestAnimationFrame(tick);
+}
+function pause() { paused = true; pausedAt = animTime; updateBtn(); }
+function togglePlayPause() {
+  if (!playing) { pausedAt = 0; play(); }
+  else if (paused) play();
+  else pause();
+}
+function replay() {
+  playing = false; paused = false; pausedAt = 0; animTime = 0;
+  setTimeout(play, 50);
+}
+
+btn.addEventListener('click', togglePlayPause);
+document.getElementById('replayBtn').addEventListener('click', replay);
+render(0);
+setTimeout(play, 400);
+</script>
+</body>
+</html>
