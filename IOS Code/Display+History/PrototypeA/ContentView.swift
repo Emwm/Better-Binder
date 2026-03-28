@@ -8,10 +8,9 @@
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View{
-//        TimerDemo()
-//        TimerNotificationDemo()
-//        UIDemo1()
+    
+    var body: some View {
+        TodayView()
     }
 }
 #Preview {

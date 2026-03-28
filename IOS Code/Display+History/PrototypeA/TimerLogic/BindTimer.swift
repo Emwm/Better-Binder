@@ -12,8 +12,6 @@
  Summary: BindTimer with two states (idle and running) tracks time of each session (from start to stop), updates history list after every bind session, constantly calculates total time passed (as well as fraction of time passed vs time limit) for todays date, and sends notifications when a time limit is reached
  
  To Update:
- - notifications only send when you are not on the app (ie when you stay on the app page then check phone notifications later there will be none) -> this
- - the fraction passed stays consistent when the app is open (goes from zero to 1 and stops at 1), but when not on app screen for entire time it goes past 1 (might have fixed check if i have)
  - need to consider behavior at midnight, will it be appended with previous days date or split into two different bind sessions?
  - do we want the ability to delete entries if there is a glitch?
  - use swift data to have data persistance (make the test functionality so that theres an entry box for simulating data as well with entrie spots for # days previous to today, # seconds passed, # start time?)
@@ -21,6 +19,7 @@
 
 import Foundation
 import Observation
+import SwiftUI
 
 // the states of the timer
 enum BindTimerState: String {
@@ -32,7 +31,7 @@ enum BindTimerState: String {
 struct BindSession: Identifiable, Equatable {
     let id = UUID()
     let startDate: Date
-    let durationSeconds: Int
+    var durationSeconds: Int
 }
 
 /*
@@ -179,12 +178,67 @@ class BindTimer{
         return String(format: "%02d:%02d:%02d", hh, mm, ss)
     }
     
-    // totals bind times for any day (can use later to total for weekly or monthly summaries
+    // totals bind times for any day
     private func _totalSeconds(on day: Date) -> Int {
         let cal = Calendar.current
         let startOfDay = cal.startOfDay(for: day)
         return _bindSessionHistory
             .filter { cal.isDate($0.startDate, inSameDayAs: startOfDay) }
             .reduce(0) { $0 + $1.durationSeconds }
+    }
+    
+    // could use when restructuring to summary history
+//    private func updateTotalsHistoryList() {
+//        // Find the index of the first entry that matches today
+//        if let index = _bindSessionTotalsHistory.firstIndex(where: { Calendar.current.isDateInToday($0.startDate) }) {
+//            // Update the value at that specific index
+//            _bindSessionTotalsHistory[index].durationSeconds = _secondsPassedToday
+//            print("Updated totals history list with seconds passed today")
+//            
+//        } else { // if no entry for today, then make one
+//            _bindSessionTotalsHistory.append(BindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedToday))
+//        }
+//    }
+}
+
+private struct BindTimerKey: EnvironmentKey {
+    static let defaultValue = BindTimer()
+}
+
+extension EnvironmentValues {
+    var bindTimer: BindTimer {
+        get { self[BindTimerKey.self] }
+        set { self[BindTimerKey.self] = newValue }
+    }
+}
+
+extension BindTimer {
+    // Creates `days` days of fake sessions before today.
+    // Each day gets `sessionsPerDay` sessions with random durations.
+    func seedFakeHistory(days: Int = 7, sessionsPerDay: Int = 2, durationRange: ClosedRange<Int> = 5...1800) {
+        let calendar = Calendar.current
+        let now = Date()
+
+        for dayOffset in 1...days {
+            // Target date is N days before today
+            guard let day = calendar.date(byAdding: .day, value: -dayOffset, to: now) else { continue }
+            let startOfDay = calendar.startOfDay(for: day)
+
+            for s in 0..<sessionsPerDay {
+                // Stagger start times within the day (e.g., morning & afternoon)
+                let hour = s == 0 ? 9 : 15 // 9 AM and 3 PM
+                var components = calendar.dateComponents([.year, .month, .day], from: startOfDay)
+                components.hour = hour
+                components.minute = Int.random(in: 0..<60)
+                components.second = Int.random(in: 0..<60)
+
+                let startDate = calendar.date(from: components) ?? startOfDay
+                let duration = Int.random(in: durationRange)
+
+                _bindSessionHistory.append(
+                    BindSession(startDate: startDate, durationSeconds: duration)
+                )
+            }
+        }
     }
 }

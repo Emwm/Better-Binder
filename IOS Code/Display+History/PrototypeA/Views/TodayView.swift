@@ -1,12 +1,11 @@
 //
-//  mvp1.swift
+//  TodayView.swift
 //  PrototypeA
 //
-//  Created by Reese Brogden on 3/10/26.
+//  Created by Reese Brogden on 3/19/26.
 //
 
 /*
- the goal of this file is to create a minimum viable prototype (mvp) that has timer functionality and ui
  functionality: time binded today (with visual graphic of fraction of time passed/time limit, totaled time value, and list view of binds for that day)
                 previous binds (list of all previous binds not including todays date)
  */
@@ -14,36 +13,52 @@
 import SwiftUI
 import Foundation
 
-struct mvp1: View {
+// formats our seconds variables into hh, mm, ss
+private func _formatSeconds(_ seconds:Int) -> String {
+    if seconds <= 0 {
+        return "00:00:00"
+    }
+    let hh: Int = seconds / 3600
+    let mm: Int = (seconds % 3600) / 60
+    let ss: Int = seconds % 60
+    return String(format: "\(hh):\(mm).\(ss)s")
+}
+
+struct TodayView: View {
     // state properties here -----------------------------------
     
-    // create instance of timer
-    @State private var timer: BindTimer = BindTimer()
-    // public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindTimerState, secondsPassedThisBind
-    // access public variables like timer.secondsPassedToday
-    // the @State means mvp1 owns this timer and only one timer is created in this view, could change later if need to change what owns this timer
+    @Environment(\.bindTimer) private var timer
+    // public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
     
     var body: some View {
         VStack{
-            // Time Binded Today ----------------------------
-            Text("Time Binding Today")
+
+            // Top today text ---------------------------
+            Text("Today")
                 .bold()
-                .font(.system(size: 35))
+                .font(.system(size: 40))
             
+            Text(Date.now.formatted(date: .long, time: .omitted))
+                .font(.system(size: 25))
+                .padding(.bottom,2)
+            
+            // Time binded ---------------------------------
+            Text("Time Binded")
+                .font(.system(size: 25))
             Text("\(timer.secondsPassedTodayString)") // total time today
-                .font(.system(size: 30))
+                .font(.system(size: 25))
                 .padding(.bottom, 10)
             
-            // visual for fraction passed
+            // Gauge of fraction passed ------------------------
             Gauge(value: timer.fractionPassedToday, in: 0...1) {
             } currentValueLabel: {
                 Text("\(Int(timer.fractionPassedToday * 100))%")
                     .font(.system(size: 25))
             }
             .gaugeStyle(.accessoryLinear)
-            .tint(.purple)
+            .tint(.green)
             .padding(.horizontal)
-            
+            // 8 hour limit lable by gauge
             HStack{
                 Spacer()
                 Text("8 hrs")
@@ -52,6 +67,7 @@ struct mvp1: View {
             .padding(.horizontal)
             .padding(.bottom, 10)
             
+            // Testing Block ----------------------------
             ZStack{
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color(.systemGray5))
@@ -70,6 +86,7 @@ struct mvp1: View {
                         Button("START"){
                             timer.start()
                         }
+                            .buttonStyle(.borderedProminent)
                     }
                     if timer.state == .running{
                         Button("STOP"){
@@ -81,31 +98,23 @@ struct mvp1: View {
             }
             .padding(.horizontal)
             
+            // List View ----------------------------
             Text("List of Binds Today:") // list view of each bind today
                 .font(.system(size: 20))
-                .bold()
-                .padding(.top, 10)
+                .padding(.top, 15)
+                .padding(.bottom, 10)
             
-            // list of times
             List{
-                ForEach(timer.bindSessionHistory){ historyList in
+                ForEach(timer.bindSessionHistory.filter { Calendar.current.isDateInToday($0.startDate) }) { todayList in
                     HStack{
-                        Text("\(historyList.startDate)")
-                        Text("\(historyList.durationSeconds)s")
+                        Text("\(todayList.startDate.formatted()),")
+                        Text("Duration: \(_formatSeconds(todayList.durationSeconds))")
                     }
                 }
             }
-            
-//            // History of Previous Binds ----------------------------
-//            Text("History of Binds") // list view of each bind today
-//                .bold()
-//                .font(.system(size: 25))
-//                .padding(.top, 10)
-//            // TO ADD HERE list view of binds for the day
         }
     }
 }
 #Preview {
-    mvp1()
+    TodayView()
 }
-
