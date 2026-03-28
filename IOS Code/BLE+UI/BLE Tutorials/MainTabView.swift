@@ -13,10 +13,10 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab){
             Tab("History", systemImage:"calendar", value: 0 ){
-                Text("temp")
+                HistoryView()
             }
             Tab("Today", systemImage:"chart.xyaxis.line", value: 1){
-                Text("home page stuff!!")
+                TodayView()
             }
             Tab("Settings", systemImage:"gear", value: 2){
                 SettingsView()
@@ -29,4 +29,5 @@ struct MainTabView: View {
 #Preview {
     MainTabView()
         .environment(BLEManager())
+        .environment(BindTimer())
 }
