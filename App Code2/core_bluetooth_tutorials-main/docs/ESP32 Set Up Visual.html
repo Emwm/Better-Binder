@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 BLE Setup Blueprint</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Source+Code+Pro:wght@300;400;500&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #3A3A3A;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; overflow: hidden;
+    font-family: 'Source Code Pro', monospace;
+  }
+  canvas { display: block; }
+  .controls {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px; z-index: 10;
+  }
+  .controls button {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    color: #aaa; padding: 8px 20px; border-radius: 6px;
+    font-family: 'Source Code Pro', monospace; font-size: 13px;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .controls button:hover { background: rgba(255,255,255,0.12); color: #ddd; }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div class="controls">
+  <button id="playPauseBtn">▶ Play</button>
+  <button id="replayBtn">↺ Replay</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+const DURATION = 48;
+
+const BG = '#3A3A3A';
+const PANEL_BG = '#333333';
+const BORDER = 'rgba(255,255,255,0.35)';
+const LABEL_COLOR = '#FFFFFF';
+
+const SYN_CLASS = '#58C4DD';
+const SYN_FUNC = '#E8DB7C';
+const SYN_STRING = '#6AAF6A';
+const SYN_PUNC = '#CCCCCC';
+const SYN_CURSOR = '#FFFFFF';
+const SYN_VAR = '#DCB98A';
+const SYN_OP = '#CCCCCC';
+const SYN_KW = '#CE8EF4';
+const SYN_COMMENT = '#6A9955';
+
+const C_DEVICE = '#58C4DD';
+const C_SERVER = '#5B9FE8';
+const C_CALLBACKS = '#E06CC0';
+const C_SERVICE = '#7B68EE';
+const C_CMD = '#FFAA00';
+const C_STATUS = '#34C759';
+const C_ADV = '#FF9500';
+
+function easeOutCubic(t) { return 1 - Math.pow(1-t, 3); }
+function easeInCubic(t) { return t*t*t; }
+function clamp01(t) { return Math.max(0, Math.min(1, t)); }
+function lerp(a, b, t) { return a + (b-a)*t; }
+function fadeIn(time, start, dur) { return clamp01((time - start) / dur); }
+
+let startTime = null, playing = false, paused = false, animTime = 0, pausedAt = 0;
+const advRings = [];
+let lastRingSpawn = -1;
+
+function getLayout(w, h) {
+  const pad = Math.min(w, h) * 0.035;
+  const gap = Math.min(w, h) * 0.025;
+  const labelH = Math.min(w, h) * 0.05;
+  const fullW = w - pad * 2;
+
+  // Horizontal split: code on top, ESP32 on bottom
+  const totalH = h - pad * 2 - labelH * 2 - gap - 50; // 50 for controls
+  const codeH = totalH * 0.25;         // code panel ~25% height
+  const espH = totalH - codeH - gap;   // ESP32 gets the rest
+
+  const codeTop = pad + labelH;
+  const espTop = codeTop + codeH + gap + labelH;
+
+  return {
+    code: { x: pad, y: codeTop, w: fullW, h: codeH },
+    esp:  { x: pad, y: espTop, w: fullW, h: espH },
+    codeLabelY: pad + labelH * 0.4,
+    espLabelY: codeTop + codeH + gap + labelH * 0.4,
+    pad, gap, labelH
+  };
+}
+
+// ─── Drawing Helpers ───
+
+function fillRRect(x, y, w, h, r, color, alpha) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); ctx.restore();
+}
+function strokeRRect(x, y, w, h, r, color, alpha, lw=1.5) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.stroke(); ctx.restore();
+}
+function drawHandLabel(text, x, y, size, alpha, color=LABEL_COLOR) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.font = `600 ${size}px 'Caveat', cursive`;
+  ctx.fillText(text, x, y); ctx.restore();
+}
+function drawGlowRect(x, y, w, h, color, alpha) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.shadowColor = color; ctx.shadowBlur = 25; ctx.fillStyle = color;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill();
+  ctx.shadowBlur = 0; ctx.restore();
+}
+
+function drawCloudPath(cx, cy, w, h) {
+  const hw = w/2, hh = h/2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + hh*0.25, hw*0.85, hh*0.55, 0, 0.1, Math.PI - 0.1);
+  ctx.ellipse(cx - hw*0.45, cy - hh*0.05, hw*0.42, hh*0.55, 0, Math.PI*0.7, Math.PI*1.8);
+  ctx.ellipse(cx + hw*0.05, cy - hh*0.35, hw*0.5, hh*0.5, 0, Math.PI*1.1, Math.PI*2.0);
+  ctx.ellipse(cx + hw*0.48, cy, hw*0.38, hh*0.52, 0, Math.PI*1.55, Math.PI*0.45);
+  ctx.closePath();
+}
+function fillCloud(cx, cy, w, h, color, alpha) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  drawCloudPath(cx, cy, w, h); ctx.fill(); ctx.restore();
+}
+function strokeCloud(cx, cy, w, h, color, alpha, lw=1.5) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = lw;
+  drawCloudPath(cx, cy, w, h); ctx.stroke(); ctx.restore();
+}
+
+function drawArrowH(x1, y, x2, color, alpha, lw=1.5, hs=7) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color;
+  ctx.lineWidth = lw; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+  const d = x2 > x1 ? 1 : -1;
+  ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x2, y);
+  ctx.lineTo(x2 - d*hs, y - hs*0.5); ctx.lineTo(x2 - d*hs, y + hs*0.5);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+// Z-shaped arrow: down from (x1,y1) to midY, horizontal to x2, then down to y2
+// This avoids overlapping components by routing around them
+function drawArrowZ(x1, y1, x2, y2, midY, progress, color, alpha, lw=1.5, hs=7) {
+  if (alpha <= 0.001 || progress <= 0) return;
+  const seg1 = Math.abs(midY - y1);     // first vertical segment
+  const seg2 = Math.abs(x2 - x1);       // horizontal segment
+  const seg3 = Math.abs(y2 - midY);     // second vertical segment
+  const total = seg1 + seg2 + seg3;
+  if (total < 1) return;
+  const drawn = progress * total;
+
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color;
+  ctx.lineWidth = lw; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y1);
+
+  if (drawn <= seg1) {
+    // Still in first vertical
+    ctx.lineTo(x1, y1 + (midY > y1 ? 1 : -1) * drawn);
+    ctx.stroke();
+  } else if (drawn <= seg1 + seg2) {
+    // First vertical done, drawing horizontal
+    ctx.lineTo(x1, midY);
+    const hDrawn = drawn - seg1;
+    const dir = x2 > x1 ? 1 : -1;
+    ctx.lineTo(x1 + dir * hDrawn, midY);
+    ctx.stroke();
+  } else {
+    // First two segments done, drawing final vertical down
+    ctx.lineTo(x1, midY);
+    ctx.lineTo(x2, midY);
+    const vDrawn = drawn - seg1 - seg2;
+    const ey = midY + (y2 > midY ? 1 : -1) * Math.min(vDrawn, seg3);
+    ctx.lineTo(x2, ey);
+    ctx.stroke();
+    // Arrowhead pointing down
+    if (progress > 0.95) {
+      const d = y2 > midY ? 1 : -1;
+      ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x2, ey);
+      ctx.lineTo(x2 - hs*0.5, ey - d*hs); ctx.lineTo(x2 + hs*0.5, ey - d*hs);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+// Vertical arrow with progress
+function drawArrowV(x, y1, y2, progress, color, alpha, lw=1.5, hs=7) {
+  if (alpha <= 0.001 || progress <= 0) return;
+  const ey = lerp(y1, y2, progress);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color;
+  ctx.lineWidth = lw; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x, y1); ctx.lineTo(x, ey); ctx.stroke();
+  if (progress > 0.95) {
+    const d = y2 > y1 ? 1 : -1;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x, ey);
+    ctx.lineTo(x - hs*0.5, ey - d*hs); ctx.lineTo(x + hs*0.5, ey - d*hs);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawRing(x, y, r, color, alpha, lw=1.5) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+}
+
+function drawCompBox(cx, cy, w, h, label, sub, color, alpha) {
+  if (alpha <= 0.001) return;
+  const s = 0.85 + 0.15 * Math.min(alpha, 1);
+  const bw = w*s, bh = h*s, bx = cx - bw/2, by = cy - bh/2;
+  drawGlowRect(bx, by, bw, bh, color, Math.min(alpha, 1) * 0.1);
+  fillRRect(bx, by, bw, bh, 6, color + '18', Math.min(alpha, 1));
+  strokeRRect(bx, by, bw, bh, 6, color, Math.min(alpha, 1) * 0.7, 1.5);
+  const a = Math.min(alpha, 1);
+  if (sub) {
+    ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `500 ${13}px 'Source Code Pro', monospace`;
+    ctx.fillText(label, cx, cy - 7);
+    ctx.globalAlpha = a * 0.45; ctx.fillStyle = '#FFF';
+    ctx.font = `300 ${10}px 'Source Code Pro', monospace`;
+    ctx.fillText(sub, cx, cy + 9); ctx.restore();
+  } else {
+    ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `500 ${13}px 'Source Code Pro', monospace`;
+    ctx.fillText(label, cx, cy); ctx.restore();
+  }
+}
+
+// ─── Main Render ───
+function render(t) {
+  const w = W(), h = H();
+  const L = getLayout(w, h);
+
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, w, h);
+
+  // Grid dots
+  ctx.save(); ctx.globalAlpha = 0.025; ctx.fillStyle = '#fff';
+  for (let gx = 40; gx < w; gx += 40)
+    for (let gy = 40; gy < h; gy += 40) {
+      ctx.beginPath(); ctx.arc(gx, gy, 0.7, 0, Math.PI*2); ctx.fill();
+    }
+  ctx.restore();
+
+  const codeIn = easeOutCubic(fadeIn(t, 0.2, 1.0));
+  const espIn = easeOutCubic(fadeIn(t, 0.5, 1.0));
+  const labelIn = easeOutCubic(fadeIn(t, 0.8, 0.8));
+
+  // Panels
+  fillRRect(L.code.x, L.code.y, L.code.w, L.code.h, 4, PANEL_BG, codeIn);
+  strokeRRect(L.code.x, L.code.y, L.code.w, L.code.h, 4, BORDER, codeIn * 0.8, 1.5);
+  drawHandLabel('Code', L.code.x, L.codeLabelY, Math.min(36, h*0.045), labelIn);
+
+  fillRRect(L.esp.x, L.esp.y, L.esp.w, L.esp.h, 4, PANEL_BG, espIn);
+  strokeRRect(L.esp.x, L.esp.y, L.esp.w, L.esp.h, 4, BORDER, espIn * 0.8, 1.5);
+  drawHandLabel('ESP32', L.esp.x, L.espLabelY, Math.min(36, h*0.045), labelIn);
+
+  // Inner shadows
+  for (const p of [L.code, L.esp]) {
+    const a = p === L.code ? codeIn : espIn;
+    if (a > 0.5) {
+      const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y + 20);
+      g.addColorStop(0, 'rgba(0,0,0,0.15)'); g.addColorStop(1, 'transparent');
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = g;
+      ctx.fillRect(p.x, p.y, p.w, 20); ctx.restore();
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // CODE LINES
+  // ══════════════════════════════════════════════
+
+  const cfs = Math.min(13, Math.max(10, L.code.h * 0.09));
+  const clh = cfs * 1.7;
+  const cpx = L.code.x + 14;
+  const cpy = L.code.y + 24;
+  const ctx_ = cpx + 18;
+  const tSpeed = 22;
+
+  const codeLines = [
+    { st: 1.5, tokens: [
+      {t:'BLEDevice',c:SYN_CLASS},{t:'::',c:SYN_PUNC},{t:'init',c:SYN_FUNC},
+      {t:'(',c:SYN_PUNC},{t:'"ESP32-BLE-Demo"',c:SYN_STRING},{t:');',c:SYN_PUNC}
+    ]},
+    { st: 5.5, tokens: [
+      {t:'BLEServer',c:SYN_CLASS},{t:'* ',c:SYN_OP},{t:'server',c:SYN_VAR},
+      {t:' = ',c:SYN_OP},{t:'BLEDevice',c:SYN_CLASS},{t:'::',c:SYN_PUNC},
+      {t:'createServer',c:SYN_FUNC},{t:'();',c:SYN_PUNC}
+    ]},
+    { st: 10.5, tokens: [
+      {t:'server',c:SYN_VAR},{t:'->',c:SYN_PUNC},{t:'setCallbacks',c:SYN_FUNC},
+      {t:'(',c:SYN_PUNC},{t:'new',c:SYN_KW},{t:' ',c:SYN_PUNC},
+      {t:'ServerCB',c:SYN_CLASS},{t:'());',c:SYN_PUNC}
+    ]},
+    { st: 14.5, tokens: [
+      {t:'BLEService',c:SYN_CLASS},{t:'* ',c:SYN_OP},{t:'svc',c:SYN_VAR},
+      {t:' = ',c:SYN_OP},{t:'server',c:SYN_VAR},{t:'->',c:SYN_PUNC},
+      {t:'createService',c:SYN_FUNC},{t:'(UUID);',c:SYN_PUNC}
+    ]},
+    { st: 19.0, tokens: [
+      {t:'// CMD Characteristic (Write)',c:SYN_COMMENT}
+    ]},
+    { st: 20.5, tokens: [
+      {t:'cmdChar',c:SYN_VAR},{t:' = ',c:SYN_OP},{t:'svc',c:SYN_VAR},
+      {t:'->',c:SYN_PUNC},{t:'createChar',c:SYN_FUNC},
+      {t:'(WRITE);',c:SYN_PUNC}
+    ]},
+    { st: 24.0, tokens: [
+      {t:'// Status Characteristic (Notify)',c:SYN_COMMENT}
+    ]},
+    { st: 25.5, tokens: [
+      {t:'statusChar',c:SYN_VAR},{t:' = ',c:SYN_OP},{t:'svc',c:SYN_VAR},
+      {t:'->',c:SYN_PUNC},{t:'createChar',c:SYN_FUNC},
+      {t:'(NOTIFY);',c:SYN_PUNC}
+    ]},
+    { st: 29.0, tokens: [
+      {t:'statusChar',c:SYN_VAR},{t:'->',c:SYN_PUNC},
+      {t:'addDescriptor',c:SYN_FUNC},{t:'(',c:SYN_PUNC},
+      {t:'new',c:SYN_KW},{t:' ',c:SYN_PUNC},
+      {t:'BLE2902',c:SYN_CLASS},{t:'());',c:SYN_PUNC}
+    ]},
+    { st: 33.0, tokens: [
+      {t:'svc',c:SYN_VAR},{t:'->',c:SYN_PUNC},{t:'start',c:SYN_FUNC},
+      {t:'();',c:SYN_PUNC}
+    ]},
+    { st: 35.5, tokens: [
+      {t:'BLEDevice',c:SYN_CLASS},{t:'::',c:SYN_PUNC},
+      {t:'getAdvertising',c:SYN_FUNC},{t:'()->',c:SYN_PUNC},
+      {t:'start',c:SYN_FUNC},{t:'();',c:SYN_PUNC}
+    ]},
+    { st: 39.0, tokens: [
+      {t:'// BLE advertising started.',c:SYN_COMMENT}
+    ]},
+  ];
+
+  for (const line of codeLines) {
+    line.totalChars = line.tokens.reduce((s,tk) => s + tk.t.length, 0);
+    line.dur = line.totalChars / tSpeed;
+    line.end = line.st + line.dur;
+  }
+
+  // Scroll
+  const visLines = Math.floor((L.code.h - 40) / clh);
+  let latestLi = 0;
+  for (let i = 0; i < codeLines.length; i++) if (t >= codeLines[i].st) latestLi = i;
+  let scrollOff = 0;
+  if (latestLi >= visLines) scrollOff = (latestLi - visLines + 2) * clh;
+
+  if (t >= codeLines[0].st) {
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(L.code.x+1,L.code.y+1,L.code.w-2,L.code.h-2,4); ctx.clip();
+
+    for (let li = 0; li < codeLines.length; li++) {
+      const line = codeLines[li];
+      if (t < line.st) continue;
+      const ly = cpy + li * clh - scrollOff;
+      if (ly < L.code.y - 20 || ly > L.code.y + L.code.h + 20) continue;
+
+      const prog = clamp01((t - line.st) / line.dur);
+      const rev = Math.floor(prog * line.totalChars);
+
+      ctx.globalAlpha = 0.3; ctx.fillStyle = '#888';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+      ctx.font = `400 ${cfs}px 'Source Code Pro', monospace`;
+      ctx.fillText(String(li+1), cpx+8, ly);
+
+      ctx.textAlign = 'left';
+      let cc = 0, cx2 = ctx_;
+      for (const tk of line.tokens) {
+        for (let c = 0; c < tk.t.length; c++) {
+          if (cc >= rev) break;
+          ctx.globalAlpha = 1; ctx.fillStyle = tk.c;
+          ctx.fillText(tk.t[c], cx2, ly);
+          cx2 += ctx.measureText(tk.t[c]).width; cc++;
+        }
+        if (cc >= rev) break;
+      }
+
+      const isLast = (li === codeLines.length-1) || (t < (codeLines[li+1]?.st ?? Infinity));
+      if (isLast) {
+        const blink = Math.sin(t*5) > 0;
+        if (prog < 1 && blink) {
+          ctx.globalAlpha = 0.9; ctx.fillStyle = SYN_CURSOR;
+          ctx.fillRect(cx2+1, ly, 2, cfs+2);
+        }
+        if (prog >= 1) {
+          const nxt = codeLines[li+1]?.st ?? Infinity;
+          const fd = 1 - clamp01((t - line.end - 0.8)/0.5);
+          if (t < nxt && blink && fd > 0) {
+            ctx.globalAlpha = fd*0.9; ctx.fillStyle = SYN_CURSOR;
+            ctx.fillRect(cx2+1, ly, 2, cfs+2);
+          }
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  // ══════════════════════════════════════════════
+  // ESP32 PANEL
+  // ══════════════════════════════════════════════
+
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(L.esp.x+1,L.esp.y+1,L.esp.w-2,L.esp.h-2,4); ctx.clip();
+
+  const ep = 20;
+  const cH = 38;
+  const espCX = L.esp.x + L.esp.w/2;
+
+  // Row gaps large enough for arrow routing between rows
+  const row1Y = L.esp.y + ep + 16 + cH/2;
+  const rGap = cH + 50;  // extra space for Z-arrow routing
+  const row2Y = row1Y + rGap;
+  const row3Y = row2Y + rGap;
+
+  const colL = L.esp.x + L.esp.w * 0.27;
+  const colR = L.esp.x + L.esp.w * 0.73;
+  const cW = L.esp.w * 0.33;
+
+  const srvCX = colR;
+  const srvCW = L.esp.w * 0.35;
+  const srvCH = cH + 14;
+
+  // Done times
+  const d = codeLines.map(l => l.end + 0.3);
+
+  // ── ROW 1: BLEDevice → Server ──
+  const devA = easeOutCubic(fadeIn(t, d[0], 0.8));
+  const devSlide = easeOutCubic(fadeIn(t, d[1], 0.8));
+  const devCX = lerp(espCX, colL, devSlide);
+
+  if (devA > 0.001) drawCompBox(devCX, row1Y, cW, cH, 'BLEDevice', '"ESP32-BLE-Demo"', C_DEVICE, devA);
+
+  const a1 = easeOutCubic(fadeIn(t, d[1]+0.4, 0.5));
+  if (a1 > 0.001 && devSlide > 0.5) {
+    drawArrowH(colL + cW/2 + 8, row1Y, lerp(colL+cW/2+8, srvCX-srvCW/2-6, a1), C_SERVER, a1*0.6, 1.5, 7);
+  }
+
+  const srvA = easeOutCubic(fadeIn(t, d[1]+0.8, 0.8));
+  if (srvA > 0.001) {
+    const s = 0.85+0.15*srvA;
+    fillCloud(srvCX, row1Y, srvCW*s, srvCH*s, C_SERVER+'15', srvA);
+    strokeCloud(srvCX, row1Y, srvCW*s, srvCH*s, C_SERVER, srvA*0.65, 1.5);
+    ctx.save(); ctx.globalAlpha = srvA; ctx.fillStyle = C_SERVER;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `500 ${14}px 'Source Code Pro', monospace`;
+    ctx.fillText('Server', srvCX, row1Y); ctx.restore();
+  }
+
+  // ── ROW 2: ServerCallbacks (left), Service (right) ──
+
+  // Arrow routing midpoints — halfway between rows, giving clear separation
+  const mid12 = row1Y + srvCH/2 + 12; // just below the server cloud
+
+  // Server → ServerCallbacks: down from server bottom, horizontal left to colL, down to row2 top
+  const a2 = easeOutCubic(fadeIn(t, d[2], 0.7));
+  if (a2 > 0.001 && srvA > 0.5) {
+    drawArrowZ(srvCX, row1Y + srvCH/2 - 2, colL, row2Y - cH/2 - 4, mid12, a2, C_CALLBACKS, 0.45, 1.5, 7);
+  }
+  const cbA = easeOutCubic(fadeIn(t, d[2]+0.5, 0.8));
+  if (cbA > 0.001) drawCompBox(colL, row2Y, cW, cH, 'ServerCallbacks', null, C_CALLBACKS, cbA);
+
+  // Server → Service: straight vertical down (same column), arrow points at top of Service box
+  const a3 = easeOutCubic(fadeIn(t, d[3], 0.7));
+  if (a3 > 0.001 && srvA > 0.5) {
+    drawArrowV(srvCX, row1Y + srvCH/2 - 2, row2Y - cH/2 - 4, a3, C_SERVICE, 0.45, 1.5, 7);
+  }
+  const svcA = easeOutCubic(fadeIn(t, d[3]+0.5, 0.8));
+  if (svcA > 0.001) drawCompBox(colR, row2Y, cW, cH, 'Service', 'SERVICE_UUID', C_SERVICE, svcA);
+
+  // ── ROW 3: CMD Char (left), Status Char (right) from Service ──
+
+  const mid23 = row2Y + cH/2 + 12; // just below row 2 boxes
+
+  // Service → CMD Char: down from Service bottom, horizontal left to colL, down to row3 top
+  const a4 = easeOutCubic(fadeIn(t, d[5], 0.7));
+  if (a4 > 0.001 && svcA > 0.5) {
+    drawArrowZ(colR, row2Y + cH/2 + 2, colL, row3Y - cH/2 - 4, mid23, a4, C_CMD, 0.45, 1.5, 7);
+  }
+  const cmdA = easeOutCubic(fadeIn(t, d[5]+0.5, 0.8));
+  if (cmdA > 0.001) drawCompBox(colL, row3Y, cW, cH, 'CMD Char', 'WRITE', C_CMD, cmdA);
+
+  // Service → Status Char: straight vertical down (same column)
+  const a5 = easeOutCubic(fadeIn(t, d[7], 0.7));
+  if (a5 > 0.001 && svcA > 0.5) {
+    drawArrowV(colR, row2Y + cH/2 + 2, row3Y - cH/2 - 4, a5, C_STATUS, 0.45, 1.5, 7);
+  }
+  const stA = easeOutCubic(fadeIn(t, d[7]+0.5, 0.8));
+  if (stA > 0.001) drawCompBox(colR, row3Y, cW, cH, 'Status Char', 'NOTIFY', C_STATUS, stA);
+
+  // BLE2902 badge on Status Char — line 9 → d[8]
+  const b29A = easeOutCubic(fadeIn(t, d[8]+0.3, 0.6));
+  if (b29A > 0.001 && stA > 0.5) {
+    const bx = colR + cW*0.22, by = row3Y + cH/2 + 6;
+    const bw = 62, bh = 18;
+    fillRRect(bx-bw/2, by, bw, bh, 3, '#FF6B6B22', b29A);
+    strokeRRect(bx-bw/2, by, bw, bh, 3, '#FF6B6B', b29A*0.6, 1);
+    ctx.save(); ctx.globalAlpha = b29A*0.8; ctx.fillStyle = '#FF6B6B';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `500 ${9}px 'Source Code Pro', monospace`;
+    ctx.fillText('BLE2902', bx, by+bh/2); ctx.restore();
+  }
+
+  // ── service->start() highlight — line 10 → d[9] ──
+  if (t >= d[9] && t < d[9]+2) {
+    const pulse = Math.sin((t-d[9])*4)*0.5+0.5;
+    strokeRRect(colR-cW/2-4, row2Y-cH/2-4, cW+8, cH+8, 10, C_SERVICE, pulse*0.35, 2);
+    const sa = easeOutCubic(fadeIn(t, d[9], 0.5));
+    ctx.save(); ctx.globalAlpha = sa*0.6; ctx.fillStyle = C_SERVICE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `400 ${10}px 'Source Code Pro', monospace`;
+    ctx.fillText('✓ started', colR, row2Y+cH/2+12); ctx.restore();
+  }
+
+  // ── Advertising — line 11 → d[10] ──
+  if (t >= d[10]) {
+    const advT = t - d[10];
+    const ri = Math.floor(advT / 0.7);
+    if (ri > lastRingSpawn) { lastRingSpawn = ri; advRings.push({born:t}); }
+
+    const la = easeOutCubic(fadeIn(t, d[10], 0.6));
+    ctx.save(); ctx.globalAlpha = la*0.7; ctx.fillStyle = C_ADV;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `600 ${11}px 'Source Code Pro', monospace`;
+    ctx.fillText('Advertising...', devCX, row1Y+cH/2+16); ctx.restore();
+  }
+
+  for (let i = advRings.length-1; i >= 0; i--) {
+    const age = t - advRings[i].born;
+    if (age > 2.5) { advRings.splice(i,1); continue; }
+    const p = age/2.5;
+    drawRing(devCX, row1Y, 15+p*80, C_ADV, (1-p)*0.3, 1.5);
+  }
+
+  ctx.restore(); // end ESP32 clip
+
+  // Fade out
+  const fo = t > 46 ? easeInCubic(clamp01((t-46)/1.5)) : 0;
+  if (fo > 0) { ctx.save(); ctx.globalAlpha = fo; ctx.fillStyle = BG; ctx.fillRect(0,0,w,h); ctx.restore(); }
+}
+
+// ─── Loop ───
+const btn = document.getElementById('playPauseBtn');
+function updateBtn() { btn.textContent = playing && !paused ? '⏸ Pause' : '▶ Play'; }
+function tick(ts) {
+  if (!playing || paused) return;
+  if (!startTime) startTime = ts - pausedAt*1000;
+  animTime = (ts - startTime)/1000;
+  if (animTime > DURATION+0.5) { playing=false; paused=false; render(DURATION); updateBtn(); return; }
+  render(animTime); requestAnimationFrame(tick);
+}
+function play() { playing=true; paused=false; startTime=null; updateBtn(); requestAnimationFrame(tick); }
+function pause() { paused=true; pausedAt=animTime; updateBtn(); }
+function togglePlayPause() {
+  if (!playing) { pausedAt=0; advRings.length=0; lastRingSpawn=-1; play(); }
+  else if (paused) play(); else pause();
+}
+function replay() {
+  playing=false; paused=false; pausedAt=0; animTime=0;
+  advRings.length=0; lastRingSpawn=-1; setTimeout(play,50);
+}
+btn.addEventListener('click', togglePlayPause);
+document.getElementById('replayBtn').addEventListener('click', replay);
+render(0); setTimeout(play, 400);
+</script>
+</body>
+</html>

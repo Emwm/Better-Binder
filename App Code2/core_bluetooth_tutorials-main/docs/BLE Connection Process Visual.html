@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLE Client-Server Motion Graphic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0A0E27;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Source Sans 3', Georgia, serif;
+  }
+
+  canvas { display: block; }
+
+  .controls {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+  }
+
+  .controls button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #ccc;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .controls button:hover {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="controls">
+  <button id="playPauseBtn">▶ Play</button>
+  <button id="replayBtn">↺ Replay</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+const DURATION = 15;
+const BG = '#0A0E27';
+const GOLD = '#FFAA00';
+const GOLD_LIGHT = '#FFD466';
+const BLUE = '#58C4DD';
+const BLUE_LIGHT = '#8FD8E8';
+const WHITE = '#E8E8E8';
+const SUBTLE = 'rgba(255,255,255,0.45)';
+const DIM_BORDER = 'rgba(255,255,255,0.15)';
+const DIM_FILL = 'rgba(255,255,255,0.03)';
+
+function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
+function easeOutCubic(t) { return 1 - Math.pow(1-t, 3); }
+function easeInCubic(t) { return t*t*t; }
+function easeOutBack(t) { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t-1, 3) + c1 * Math.pow(t-1, 2); }
+function clamp01(t) { return Math.max(0, Math.min(1, t)); }
+function lerp(a, b, t) { return a + (b-a)*t; }
+function fadeIn(time, start, dur) { return clamp01((time - start) / dur); }
+
+let startTime = null;
+let playing = false;
+let paused = false;
+let animTime = 0;
+let pausedAt = 0; // track where we paused
+
+const pulseRings = [];
+const PULSE_INTERVAL = 1.0;
+let lastPulseTime = -1;
+
+const packets = [];
+let lastPacketTime = -1;
+const PACKET_INTERVAL = 0.18;
+
+// ─── Drawing Helpers ───
+
+function drawCircle(x, y, r, color, alpha = 1, glowRadius = 0) {
+  if (r <= 0 || alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (glowRadius > 0) {
+    const grad = ctx.createRadialGradient(x, y, r * 0.5, x, y, r + glowRadius);
+    grad.addColorStop(0, color);
+    grad.addColorStop(0.6, color + '44');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, r + glowRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawRing(x, y, r, color, alpha, lineWidth = 2) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawText(text, x, y, size, color, alpha = 1, align = 'center', font = null) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  ctx.font = `${font || '300'} ${size}px 'Source Sans 3', Georgia, serif`;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawCodeText(text, x, y, size, color, alpha = 1, align = 'center') {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  ctx.font = `400 ${size}px 'Courier New', monospace`;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawLine(x1, y1, x2, y2, color, alpha, lineWidth = 2) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPartialLine(x1, y1, x2, y2, progress, color, alpha, lineWidth = 2) {
+  drawLine(x1, y1, lerp(x1, x2, progress), lerp(y1, y2, progress), color, alpha, lineWidth);
+}
+
+function drawScanArc(cx, cy, radius, angle, spread, color, alpha) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+  grad.addColorStop(0, color + '00');
+  grad.addColorStop(0.3, color + '18');
+  grad.addColorStop(0.7, color + '10');
+  grad.addColorStop(1, color + '00');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, radius, angle - spread/2, angle + spread/2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = alpha * 0.6;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawRoundedRect(x, y, w, h, r, color, alpha, lineWidth = 1.5) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function fillRoundedRect(x, y, w, h, r, color, alpha) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ─── Main Render ───
+function render(t) {
+  const w = W(), h = H();
+  const scale = Math.min(w / 1200, h / 750);
+  const cx = w / 2, cy = h / 2;
+
+  const nodeR = 28 * scale;
+  const peripheralX = cx - 200 * scale;
+  const peripheralY = cy - 40 * scale;
+  const centralX = cx + 200 * scale;
+  const centralY = cy - 40 * scale;
+
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid dots
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = '#fff';
+  const gridSpacing = 40 * scale;
+  for (let gx = gridSpacing; gx < w; gx += gridSpacing) {
+    for (let gy = gridSpacing; gy < h; gy += gridSpacing) {
+      ctx.beginPath();
+      ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // ══════════════════════════════════════════════
+  // FRAME 1 (0–3s): Peripheral advertises
+  // ══════════════════════════════════════════════
+
+  const peripheralAppear = easeOutCubic(clamp01(t / 0.8));
+
+  if (t >= 0.3 && t < 10.0) {
+    const pulseTime = t - 0.3;
+    if (Math.floor(pulseTime / PULSE_INTERVAL) > lastPulseTime) {
+      lastPulseTime = Math.floor(pulseTime / PULSE_INTERVAL);
+      pulseRings.push({ born: t, x: peripheralX, y: peripheralY });
+    }
+  }
+
+  for (let i = pulseRings.length - 1; i >= 0; i--) {
+    const ring = pulseRings[i];
+    const age = t - ring.born;
+    if (age > 2.5) { pulseRings.splice(i, 1); continue; }
+    const progress = age / 2.5;
+    const r = nodeR + progress * 180 * scale;
+    let alpha = (1 - progress) * 0.4 * peripheralAppear;
+    if (t >= 5.0 && t < 6.0) {
+      const dp = Math.sin(clamp01((t - 5.5) / 0.3) * Math.PI);
+      alpha += (0.3 + dp * 0.3) * (1 - progress);
+    }
+    drawRing(ring.x, ring.y, r, GOLD_LIGHT, alpha, 1.5 * scale);
+  }
+
+  // Peripheral node
+  const periphGlow = t >= 9.5 ? 15 * scale * easeOutCubic(clamp01((t - 9.5) / 0.5)) : 5 * scale;
+  drawCircle(peripheralX, peripheralY, nodeR * peripheralAppear, GOLD, peripheralAppear, periphGlow);
+  drawCircle(peripheralX, peripheralY, nodeR * 0.4 * peripheralAppear, '#0A0E27', peripheralAppear * 0.3);
+
+  const labelFade1 = easeOutCubic(fadeIn(t, 1.2, 0.8));
+  drawText('Peripheral (Server)', peripheralX, peripheralY + nodeR + 28 * scale, 14 * scale, GOLD_LIGHT, labelFade1 * 0.8);
+
+  const sub1A = easeOutCubic(fadeIn(t, 1.8, 0.7)) * (1 - easeInCubic(fadeIn(t, 3.0, 0.5)));
+  drawText('Advertises...', cx, cy + 155 * scale, 20 * scale, SUBTLE, sub1A, 'center', '300 italic');
+
+  // ══════════════════════════════════════════════
+  // FRAME 2 (3–6s): Central scanning
+  // ══════════════════════════════════════════════
+
+  const centralAppear = easeOutCubic(clamp01((t - 3.0) / 0.8));
+  const centralSlide = easeOutCubic(clamp01((t - 3.0) / 1.2));
+  const actualCentralX = lerp(w + 50, centralX, centralSlide);
+
+  if (t >= 3.5 && t < 6.0) {
+    const scanT = clamp01((t - 3.5) / 2.0);
+    const easedScan = easeInOutCubic(scanT);
+    const scanAngle = Math.PI / 2 + easedScan * (Math.PI / 2);
+    const discoveryT = clamp01((t - 5.5) / 0.3);
+    const discoveryPulse = Math.sin(discoveryT * Math.PI);
+    const baseFade = Math.min(1, (1 - clamp01((t - 5.6) / 0.4)));
+    const scanAlpha = (baseFade * 0.5 + discoveryPulse * 0.35) * centralAppear;
+    drawScanArc(actualCentralX, centralY, 320 * scale + discoveryPulse * 40 * scale, scanAngle, 0.6 + discoveryPulse * 0.15, BLUE, scanAlpha);
+    if (discoveryPulse > 0.01) {
+      drawRing(actualCentralX, centralY, nodeR + discoveryPulse * 60 * scale, BLUE_LIGHT, discoveryPulse * 0.5, 2 * scale);
+    }
+  }
+
+  const centralGlow = t >= 9.5 ? 15 * scale * easeOutCubic(clamp01((t - 9.5) / 0.5)) : 5 * scale;
+  drawCircle(actualCentralX, centralY, nodeR * centralAppear, BLUE, centralAppear, centralGlow);
+  drawCircle(actualCentralX, centralY, nodeR * 0.4 * centralAppear, '#0A0E27', centralAppear * 0.3);
+
+  const labelFade2 = easeOutCubic(fadeIn(t, 4.0, 0.8));
+  if (centralAppear > 0) drawText('Central (Client)', actualCentralX, centralY + nodeR + 28 * scale, 14 * scale, BLUE_LIGHT, labelFade2 * 0.8);
+
+  const sub2A = easeOutCubic(fadeIn(t, 4.2, 0.7)) * (1 - easeInCubic(fadeIn(t, 6.0, 0.5)));
+  drawText('...Scans & Finds', cx, cy + 155 * scale, 20 * scale, SUBTLE, sub2A, 'center', '300 italic');
+
+  // ══════════════════════════════════════════════
+  // FRAME 2b (6–9.5s): Discovered / Connected UI
+  // ══════════════════════════════════════════════
+
+  const cellSize = 38 * scale;
+  const cellPad = 5 * scale;
+  const arrSlots = 3;
+  const arrW = arrSlots * (cellSize + cellPad) + cellPad;
+  const arrH = cellSize + cellPad * 2;
+  const uiBaseY = centralY + nodeR + 60 * scale;
+  const arrX = actualCentralX - arrW / 2;
+  const arrY = uiBaseY;
+  const connBoxW = cellSize + cellPad * 2;
+  const connBoxH = arrH;
+  const connBoxX = actualCentralX - connBoxW / 2;
+  const connBoxY = arrY + arrH + 38 * scale;
+  const miniR = 13 * scale;
+
+  const uiIn = easeOutCubic(fadeIn(t, 6.2, 0.7));
+  const uiOut = easeInCubic(fadeIn(t, 10.0, 0.8));
+  const uiAlpha = uiIn * (1 - uiOut);
+
+  if (uiAlpha > 0.001) {
+    // ── Discovered Devices array ──
+    fillRoundedRect(arrX, arrY, arrW, arrH, 6 * scale, DIM_FILL, uiAlpha);
+    drawRoundedRect(arrX, arrY, arrW, arrH, 6 * scale, DIM_BORDER, uiAlpha, 1.2 * scale);
+
+    for (let s = 1; s < arrSlots; s++) {
+      const dx = arrX + s * (cellSize + cellPad);
+      drawLine(dx, arrY + cellPad, dx, arrY + arrH - cellPad, DIM_BORDER, uiAlpha * 0.5, 1 * scale);
+    }
+
+    // Index labels inside slots
+    for (let s = 0; s < arrSlots; s++) {
+      const sx = arrX + cellPad + s * (cellSize + cellPad) + cellSize / 2;
+      const sy = arrY + arrH - cellPad - 3 * scale;
+      drawText(String(s), sx, sy, 9 * scale, 'rgba(255,255,255,0.15)', uiAlpha, 'center', '300');
+    }
+
+    drawCodeText('discoveredDevices[]', arrX + arrW / 2, arrY - 13 * scale,
+      11 * scale, BLUE_LIGHT, uiAlpha * 0.65, 'center');
+
+    // ── Connected Device box ──
+    fillRoundedRect(connBoxX, connBoxY, connBoxW, connBoxH, 6 * scale, DIM_FILL, uiAlpha);
+    drawRoundedRect(connBoxX, connBoxY, connBoxW, connBoxH, 6 * scale, DIM_BORDER, uiAlpha, 1.2 * scale);
+
+    drawCodeText('connectedDevice', connBoxX + connBoxW / 2, connBoxY + connBoxH + 16 * scale,
+      11 * scale, BLUE_LIGHT, uiAlpha * 0.65, 'center');
+
+    // ── Gold dot: pop into array, then move to connected box ──
+    const slot0X = arrX + cellPad + cellSize / 2;
+    const slot0Y = arrY + cellPad + cellSize / 2;
+    const connDotX = connBoxX + connBoxW / 2;
+    const connDotY = connBoxY + connBoxH / 2;
+
+    const dotAppear = easeOutBack(clamp01((t - 6.9) / 0.4));
+    const dotMove = easeInOutCubic(clamp01((t - 8.4) / 0.7));
+
+    if (t >= 6.9) {
+      let dotX, dotY, dotS;
+      if (dotMove <= 0) {
+        dotX = slot0X; dotY = slot0Y; dotS = dotAppear;
+      } else {
+        // Smooth arc path from array slot to connected box
+        dotX = lerp(slot0X, connDotX, dotMove);
+        dotY = lerp(slot0Y, connDotY, dotMove) - Math.sin(dotMove * Math.PI) * 15 * scale;
+        dotS = 1;
+      }
+
+      drawCircle(dotX, dotY, miniR * dotS, GOLD, uiAlpha, 5 * scale * dotS);
+      drawCircle(dotX, dotY, miniR * 0.35 * dotS, '#0A0E27', uiAlpha * 0.3);
+
+      // Flash when dot arrives in connected box
+      if (dotMove > 0.85 && dotMove <= 1.0) {
+        const flashA = Math.sin(((dotMove - 0.85) / 0.15) * Math.PI) * 0.5;
+        drawRing(connDotX, connDotY, miniR + 10 * scale, GOLD_LIGHT, flashA * uiAlpha, 1.5 * scale);
+      }
+      // After arrival: steady glow on connected box
+      if (dotMove >= 1) {
+        const glowA = easeOutCubic(clamp01((t - 9.1) / 0.3)) * uiAlpha;
+        drawRoundedRect(connBoxX, connBoxY, connBoxW, connBoxH, 6 * scale, GOLD, glowA * 0.35, 1.5 * scale);
+      }
+      // Highlight connected box as dot approaches
+      if (dotMove > 0.3 && dotMove < 1) {
+        drawRoundedRect(connBoxX, connBoxY, connBoxW, connBoxH, 6 * scale, GOLD, dotMove * 0.2 * uiAlpha, 1.5 * scale);
+      }
+    }
+
+    // ── .connect() call ──
+    const connectAlpha = easeOutCubic(fadeIn(t, 8.0, 0.5)) * uiAlpha;
+    if (connectAlpha > 0.001) {
+      const arrowSY = arrY + arrH + 4 * scale;
+      const arrowEY = connBoxY - 4 * scale;
+      const arrowX = actualCentralX;
+      const arrowA = connectAlpha * 0.5;
+      drawLine(arrowX, arrowSY, arrowX, arrowEY, SUBTLE, arrowA, 1.2 * scale);
+      // Arrowhead
+      ctx.save();
+      ctx.globalAlpha = arrowA;
+      ctx.fillStyle = SUBTLE;
+      ctx.beginPath();
+      ctx.moveTo(arrowX, arrowEY);
+      ctx.lineTo(arrowX - 4 * scale, arrowEY - 7 * scale);
+      ctx.lineTo(arrowX + 4 * scale, arrowEY - 7 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      drawCodeText('.connect(device)', arrowX + 16 * scale, (arrowSY + arrowEY) / 2,
+        10.5 * scale, BLUE_LIGHT, connectAlpha * 0.8, 'left');
+    }
+  }
+
+  // Subtitles for 2b
+  const sub2bA = easeOutCubic(fadeIn(t, 6.5, 0.6)) * (1 - easeInCubic(fadeIn(t, 7.8, 0.4)));
+  drawText('Device Discovered', cx, cy + 195 * scale, 18 * scale, SUBTLE, sub2bA, 'center', '300 italic');
+
+  const sub2cA = easeOutCubic(fadeIn(t, 8.2, 0.5)) * (1 - easeInCubic(fadeIn(t, 9.5, 0.4)));
+  drawText('Connecting...', cx, cy + 195 * scale, 18 * scale, SUBTLE, sub2cA, 'center', '300 italic');
+
+  // ══════════════════════════════════════════════
+  // FRAME 3 (9–11.5s): Connection line + packets
+  // ══════════════════════════════════════════════
+
+  const lineProgress = easeInOutCubic(clamp01((t - 9.0) / 0.8));
+  const lineFinalX = centralAppear > 0.99 ? centralX : actualCentralX;
+
+  if (lineProgress > 0) {
+    const lsx = peripheralX + nodeR;
+    const lex = lineFinalX - nodeR;
+    drawPartialLine(lsx, peripheralY, lex, centralY, lineProgress, 'rgba(255,255,255,0.25)', 1, 2 * scale);
+    drawPartialLine(lsx, peripheralY, lex, centralY, lineProgress, 'rgba(255,255,255,0.08)', 1, 6 * scale);
+  }
+
+  if (t >= 9.8 && t < 13.0) {
+    const pt = t - 9.8;
+    if (Math.floor(pt / PACKET_INTERVAL) > lastPacketTime) {
+      lastPacketTime = Math.floor(pt / PACKET_INTERVAL);
+      packets.push({ born: t, dir: packets.length % 2 === 0 ? 1 : -1 });
+    }
+  }
+
+  const lsx = peripheralX + nodeR;
+  const lex = lineFinalX - nodeR;
+  for (let i = packets.length - 1; i >= 0; i--) {
+    const pkt = packets[i];
+    const age = t - pkt.born;
+    if (age > 0.8) { packets.splice(i, 1); continue; }
+    const p = easeInOutCubic(age / 0.8);
+    const a = Math.sin(p * Math.PI) * 0.9;
+    const px = pkt.dir > 0 ? lerp(lsx, lex, p) : lerp(lex, lsx, p);
+    const py = peripheralY + Math.sin(p * Math.PI * 3) * 3 * scale;
+    drawCircle(px, py, 3.5 * scale, pkt.dir > 0 ? GOLD_LIGHT : BLUE_LIGHT, a, 6 * scale);
+  }
+
+  const sub3A = easeOutCubic(fadeIn(t, 10.0, 0.6)) * (1 - easeInCubic(fadeIn(t, 11.5, 0.4)));
+  drawText('Connected', cx, cy + 155 * scale, 20 * scale, WHITE, sub3A * 0.7, 'center', '400');
+
+  // ══════════════════════════════════════════════
+  // FRAME 4 (11.5–14s): Code bridge
+  // ══════════════════════════════════════════════
+
+  const code1A = easeOutCubic(fadeIn(t, 11.8, 0.7));
+  const code2A = easeOutCubic(fadeIn(t, 12.1, 0.7));
+  const fadeAll = t > 14.0 ? easeInCubic(clamp01((t - 14.0) / 0.8)) : 0;
+
+  if (code1A > 0) {
+    const yo = (1 - code1A) * 10 * scale;
+    drawCodeText('BLECharacteristicCallbacks.onWrite()', peripheralX, peripheralY - nodeR - 30 * scale - yo,
+      13 * scale, GOLD_LIGHT, code1A * (1 - fadeAll) * 0.85);
+  }
+  if (code2A > 0) {
+    const yo = (1 - code2A) * 10 * scale;
+    drawCodeText('CBPeripheral.writeValue()', lineFinalX, centralY - nodeR - 30 * scale - yo,
+      13 * scale, BLUE_LIGHT, code2A * (1 - fadeAll) * 0.85);
+  }
+
+  if (fadeAll > 0) {
+    ctx.save();
+    ctx.globalAlpha = fadeAll;
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
+}
+
+// ─── Loop ───
+const btn = document.getElementById('playPauseBtn');
+
+function updateBtn() {
+  btn.textContent = playing && !paused ? '⏸ Pause' : '▶ Play';
+}
+
+function tick(ts) {
+  if (!playing || paused) return;
+  if (!startTime) startTime = ts - pausedAt * 1000;
+  animTime = (ts - startTime) / 1000;
+  if (animTime > DURATION + 0.5) { playing = false; paused = false; render(DURATION); updateBtn(); return; }
+  render(animTime);
+  requestAnimationFrame(tick);
+}
+
+function play() {
+  playing = true;
+  paused = false;
+  startTime = null;
+  if (pausedAt === 0) {
+    lastPulseTime = -1;
+    lastPacketTime = -1;
+    pulseRings.length = 0;
+    packets.length = 0;
+  }
+  updateBtn();
+  requestAnimationFrame(tick);
+}
+
+function pause() {
+  paused = true;
+  pausedAt = animTime;
+  updateBtn();
+}
+
+function togglePlayPause() {
+  if (!playing) { pausedAt = 0; play(); }
+  else if (paused) { play(); }
+  else { pause(); }
+}
+
+function replay() {
+  playing = false;
+  paused = false;
+  pausedAt = 0;
+  animTime = 0;
+  lastPulseTime = -1;
+  lastPacketTime = -1;
+  pulseRings.length = 0;
+  packets.length = 0;
+  setTimeout(() => { play(); }, 50);
+}
+
+btn.addEventListener('click', togglePlayPause);
+document.getElementById('replayBtn').addEventListener('click', replay);
+
+render(0);
+setTimeout(play, 400);
+</script>
+</body>
+</html>
