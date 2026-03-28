@@ -3,10 +3,10 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-int sensPin = A0;
+int sensPin = 34;
 int value = 0;
 int prevValue = 0;
-int turnCount = 5;
+int turnCount = 2;
 
 // MARK: - UUIDs (must match iOS)
 static BLEUUID SERVICE_UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
@@ -58,12 +58,11 @@ class CmdCallbacks : public BLECharacteristicCallbacks {
 };
 
 
-
-
-
 void setup() {
+
   Serial.begin(9600);
   pinMode(LED_PIN, OUTPUT);
+  pinMode(sensPin, INPUT);
   digitalWrite(LED_PIN, LOW);
 
   BLEDevice::init("ESP32-BLE-Demo");
@@ -74,8 +73,6 @@ void setup() {
   BLEService* service = server->createService(SERVICE_UUID);
 
 
-
-
   // CMD characteristic (client -> esp32)
   BLECharacteristic* cmdChar = service->createCharacteristic(
     CMD_CHAR_UUID,
@@ -83,18 +80,12 @@ void setup() {
   );
   cmdChar->setCallbacks(new CmdCallbacks());
 
-
-
-
   // STATUS characteristic (esp32 -> client)
   g_statusChar = service->createCharacteristic(
     STATUS_CHAR_UUID,
     BLECharacteristic::PROPERTY_NOTIFY
   );
   g_statusChar->addDescriptor(new BLE2902()); // required for iOS notify subscribe
-
-
-
 
 
   service->start();
@@ -109,14 +100,20 @@ void setup() {
 
 
 
-
 void loop() {
   delay(50);
-  //prevValue = value;
-  value = analogRead(sensPin);
-  // int delta = value-prevValue;
-  // char display[12] = "[----------]";
-  sendStatus((String) value);
+  prevValue = value;
+  value = map(analogRead(sensPin), 0, 4095, 0, 1000);
+  int delta = prevValue - value;
+
+  if(delta > 550){
+    turnCount++;
+  }else if(delta < - 550){
+    turnCount--;
+  }
+  int location = value + turnCount*1000;
+  Serial.println(location);
+  sendStatus((String) location);
 /*
   if(delta > 550){
     turnCount++;
