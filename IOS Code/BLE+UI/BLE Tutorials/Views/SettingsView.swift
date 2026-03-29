@@ -34,6 +34,15 @@ struct SettingsView: View {
                     } label: {
                         Label("Test Timer", systemImage: "timer.circle.fill")
                     }
+                    
+                }
+                Section(header: Text("Calibration")) {
+                    NavigationLink{
+                        CalibrationView()
+                    } label: {
+                        Label("Calibration", systemImage: "timer.circle.fill")
+                    }
+                    
                 }
                 /*Section(header: Text("Connection"), footer: Text("Automatically tries to find your ESP32 on launch.")){
                     Button("Setup Connection"){

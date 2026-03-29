@@ -23,7 +23,7 @@ final class BLEManager: NSObject {
 
     var devices: [Device] = []
     var statusText: String = "2034"
-    var statusInt: Double = 4
+    var statusInt: Double = 0
 
     struct Device: Identifiable, Hashable {
         let id: UUID
@@ -160,9 +160,7 @@ extension BLEManager: CBPeripheralDelegate {
 
         if characteristic.uuid == BLEIDs.status {
             statusText = text
-            if let intValue = Double(text) {
-                        statusInt = intValue // Update your Int property here
-                    }
+            statusInt = Double(text)!
         }
     }
 }

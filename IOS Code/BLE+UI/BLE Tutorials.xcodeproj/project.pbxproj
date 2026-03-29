@@ -114,7 +114,6 @@
 			isa = PBXGroup;
 			children = (
 				E33E76632F3BC0E6008D27B5 /* BLEManager.swift */,
-				5C2793932F78A654006DDB32 /* CalibrationView.swift */,
 			);
 			path = "Source Code";
 			sourceTree = "<group>";
@@ -142,6 +141,7 @@
 				5C2793722F787149006DDB32 /* HistoryView.swift */,
 				E33E766D2F3BC368008D27B5 /* BLEControlView.swift */,
 				5CB017952F6CC99B00D50145 /* SettingsView.swift */,
+				5C2793932F78A654006DDB32 /* CalibrationView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
