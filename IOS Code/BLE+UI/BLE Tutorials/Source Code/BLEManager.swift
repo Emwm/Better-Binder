@@ -133,34 +133,46 @@ extension BLEManager: CBPeripheralDelegate {
             peripheral.discoverCharacteristics([BLEIDs.cmd, BLEIDs.status], for: s)
         }
     }
-
+    
     func peripheral(_ peripheral: CBPeripheral,
                     didDiscoverCharacteristicsFor service: CBService,
                     error: Error?) {
         guard error == nil else { return }
         guard let chars = service.characteristics else { return }
-
+        
         for c in chars {
             if c.uuid == BLEIDs.cmd { cmdChar = c }
             if c.uuid == BLEIDs.status { statusChar = c }
         }
-
+        
         // subscribe to status notifications (minimal)
         if let statusChar {
             peripheral.setNotifyValue(true, for: statusChar)
         }
     }
-
+    //update thread
     func peripheral(_ peripheral: CBPeripheral,
                     didUpdateValueFor characteristic: CBCharacteristic,
                     error: Error?) {
-        guard error == nil else { return }
-        guard let data = characteristic.value else { return }
+        guard error == nil, let data = characteristic.value else { return }
+        
         let text = String(decoding: data, as: UTF8.self)
-
+        
         if characteristic.uuid == BLEIDs.status {
-            statusText = text
-            statusInt = Double(text)!
+            // 1. Trim whitespace/newlines to prevent Double() from failing
+            let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // 2. Use 'if let' to safely parse the number
+            if let numericValue = Double(cleanText) {
+                // 3. Ensure the UI update happens on the Main Thread
+                Task { @MainActor in
+                    self.statusText = cleanText
+                    self.statusInt = numericValue
+                    print("Updated statusInt to: \(numericValue)") // Debugging help
+                    }
+            } else {
+                print("Failed to parse BLE data: '\(text)'")
+            }
         }
     }
 }

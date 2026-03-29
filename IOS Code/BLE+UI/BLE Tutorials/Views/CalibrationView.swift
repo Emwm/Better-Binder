@@ -25,6 +25,11 @@ struct CalibrationView: View {
                 VStack{
                     Text("Curent Value is \(Int(currentStatus))")
                     Text("Computed Value is \(Double(compValue)*100)%")
+                    Text("Raw Int: \(ble.statusInt)")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    
+                    
                 }
             }
             //tint(fillColor(for: currentStatus))
