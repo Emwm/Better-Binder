@@ -1,6 +1,5 @@
 import CoreBluetooth
 import Observation
-internal import Combine
 
 
 // MARK: - UUIDs (keep constant across series)
@@ -22,8 +21,7 @@ final class BLEManager: NSObject {
     var isConnected = false
 
     var devices: [Device] = []
-    var statusText: String = "2034"
-    var statusInt: Double = 4
+    var statusText: String = "—"
 
     struct Device: Identifiable, Hashable {
         let id: UUID
@@ -160,9 +158,6 @@ extension BLEManager: CBPeripheralDelegate {
 
         if characteristic.uuid == BLEIDs.status {
             statusText = text
-            if let intValue = Double(text) {
-                        statusInt = intValue // Update your Int property here
-                    }
         }
     }
 }
