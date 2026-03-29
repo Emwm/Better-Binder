@@ -19,7 +19,7 @@ struct CalibrationView: View {
         VStack{
                     Text("Compression Calibration")
                         .font(.title)
-                        .padding(.bottom, 15)
+                        .padding(.bottom, 10)
                         .bold()
             
                     // gauge visual --------------------------
@@ -30,9 +30,12 @@ struct CalibrationView: View {
                             .bold()
                         Text("Percentage Compressed:")
                             .font(.system(size: 20))
-                        Text("\(Double(compValue)*100)%")
+                        
+                        //String(format: "%02d:%02d.%02ds", hh, mm, ss)
+                        Text("\(Decimal(compValue*100).formatted(.number.precision(.fractionLength(0...2))))%")
                             .font(.system(size: 20))
                             .padding(.bottom, 10)
+                            .bold()
                     } currentValueLabel: {
                         VStack{
                             HStack{
@@ -45,10 +48,11 @@ struct CalibrationView: View {
                             .padding(.bottom, 10)
                         }
                     }
-                    //tint(fillColor(for: currentStatus))
+                    .tint(fillColor(for: currentStatus))
                     .gaugeStyle(.linearCapacity) // Or .accessoryCircular
                     .animation(.spring(), value: currentStatus)
-                    .padding()
+                    .padding(.bottom, 10)
+                    .padding(.horizontal)
                 
                     // setting values visual -----------------------
                     ZStack{
@@ -61,7 +65,7 @@ struct CalibrationView: View {
                                 .font(.system(size: 20))
                             Text("\(Int(currentStatus))")
                                 .padding(.bottom, 5)
-                                .font(.system(size: 25))
+                                .font(.system(size: 20))
                                 .bold()
                             HStack{
                                 Text("Set as:")
