@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(BLEManager.self) private var ble
     @State private var autoReconnect = true
     
     var body: some View {
@@ -56,5 +55,5 @@ struct SettingsView: View {
 
 #Preview {
     MainTabView()
-        .environment(BLEManager())
+        .environment(BLEManager.mock)
 }

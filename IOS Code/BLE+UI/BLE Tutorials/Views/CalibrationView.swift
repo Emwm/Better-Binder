@@ -112,5 +112,5 @@ struct MarkerIndicator: View {
 
 #Preview {
     CalibrationView()
-        .environment(BLEManager())
+        .environment(BLEManager.mock)
 }

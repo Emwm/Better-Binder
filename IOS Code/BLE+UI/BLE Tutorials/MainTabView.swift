@@ -28,6 +28,6 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
-        .environment(BLEManager())
+        .environment(BLEManager.mock)
         .environment(BindTimer())
 }

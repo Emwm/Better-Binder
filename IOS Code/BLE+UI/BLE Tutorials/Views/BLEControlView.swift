@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BLEControlView: View {
-    @State private var ble = BLEManager()
+    @Environment(BLEManager.self) private var ble
     
     private var connectionLabel: String {
         if ble.isScanning { return "Scanning…" }
