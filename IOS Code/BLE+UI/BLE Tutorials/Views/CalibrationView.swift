@@ -17,58 +17,81 @@ struct CalibrationView: View {
         let compValue = DynPos(for: currentStatus)
 
         VStack{
-            Text("Compression Calibration")
-                .font(.title)
-                .padding(.bottom, 15)
-                .bold()
+                    Text("Compression Calibration")
+                        .font(.title)
+                        .padding(.bottom, 15)
+                        .bold()
             
-            // setting max and min values ------------------
-            Text("Current Value: \(Int(currentStatus))")
-                .padding(.bottom, 5)
-                .font(.system(size: 20))
-                .bold()
-            HStack{
-                Text("Set as:")
-                    .padding(.bottom, 5)
-                    .font(.system(size: 20))
-                    .padding(.horizontal, 3)
-                Button("Min Value"){
-                    minPoint = currentStatus
-                }
-                    .buttonStyle(.bordered)
-                    .tint(.black)
-                    .font(.system(size: 20))
-                    .padding(.horizontal, 5)
+                    // gauge visual --------------------------
+                    Gauge(value: compValue+0.1, in: 0...1.2){
+                        Text("Compression State:")
+                            .padding(.bottom, 5)
+                            .font(.system(size: 25))
+                            .bold()
+                        Text("Percentage Compressed:")
+                            .font(.system(size: 20))
+                        Text("\(Double(compValue)*100)%")
+                            .font(.system(size: 20))
+                            .padding(.bottom, 10)
+                    } currentValueLabel: {
+                        VStack{
+                            HStack{
+                                Text("Min: \(Int(minPoint))")
+                                    .font(.system(size: 20))
+                                Spacer()
+                                Text("Max: \(Int(maxPoint))")
+                                    .font(.system(size: 20))
+                            }
+                            .padding(.bottom, 10)
+                        }
+                    }
+                    //tint(fillColor(for: currentStatus))
+                    .gaugeStyle(.linearCapacity) // Or .accessoryCircular
+                    .animation(.spring(), value: currentStatus)
+                    .padding()
                 
-                Button("Max Value"){
-                    maxPoint = currentStatus
+                    // setting values visual -----------------------
+                    ZStack{
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color(.systemGray5))
+                            .frame(width: 350, height: 140) // minimum size
+                        VStack{
+                            // setting max and min values ------------------
+                            Text("Current Compression Value:")
+                                .font(.system(size: 20))
+                            Text("\(Int(currentStatus))")
+                                .padding(.bottom, 5)
+                                .font(.system(size: 25))
+                                .bold()
+                            HStack{
+                                Text("Set as:")
+                                    .padding(.bottom, 5)
+                                    .font(.system(size: 20))
+                                Button("Min Value"){
+                                    minPoint = currentStatus
+                                }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(.blue)
+                                    .foregroundStyle(.white)
+                                    .font(.system(size: 20))
+                                    .padding(.horizontal, 5)
+                                    .bold()
+                                    
+                                
+                                Button("Max Value"){
+                                    maxPoint = currentStatus
+                                }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(.blue)
+                                    .foregroundStyle(.white)
+                                    .font(.system(size: 20))
+                                    .padding(.horizontal, 5)
+                                    .bold()
+                            }
+                        }
+                    }
                 }
-                    .buttonStyle(.bordered)
-                    .tint(.black)
-                    .font(.system(size: 20))
-                    .padding(.horizontal, 5)
-            }
-            
-            // gauge visual --------------------------
-            Gauge(value: compValue, in: 0...1){
-                Text("Compression State:")
-            } currentValueLabel: {
-                VStack{
-                    Text("Curent Value is \(Int(currentStatus))")
-                    Text("Computed Value is \(Double(compValue)*100)%")
-                    Text("Raw Int: \(ble.statusInt)")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    
-                    
-                }
-            }
-            //tint(fillColor(for: currentStatus))
-            .gaugeStyle(.linearCapacity) // Or .accessoryCircular
-            .animation(.spring(), value: currentStatus)
-            .padding()
-        }
-        Spacer()
+                Spacer()
     }
     
     private func DynPos(for value: Double) -> Double {
