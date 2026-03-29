@@ -17,12 +17,24 @@ struct SettingsView: View {
                 Section(header: Text("Connection")) {
                     NavigationLink{
                         BLEControlView()
-                        
                     } label: {
-                        Label("ESP32 Setup", systemImage: "dot.radiowaves.leftandright")
+                        Label("ESP32 Setup", systemImage: "badge.plus.radiowaves.right")
                     }
                 }
-                
+                Section(header: Text("Notifications")) {
+                    NavigationLink{
+                        NotificationControlView()
+                    } label: {
+                        Label("Notification Setup", systemImage: "bell.badge.fill")
+                    }
+                }
+                Section(header: Text("Testing")) {
+                    NavigationLink{
+                        TestTimerView()
+                    } label: {
+                        Label("Test Timer", systemImage: "timer.circle.fill")
+                    }
+                }
                 /*Section(header: Text("Connection"), footer: Text("Automatically tries to find your ESP32 on launch.")){
                     Button("Setup Connection"){
                         //BLEControlView() fix with proper int control

@@ -34,6 +34,13 @@ struct BindSession: Identifiable, Equatable {
     var durationSeconds: Int
 }
 
+// this is to load generated data from json
+private struct BindSessionDTO: Codable {
+    let id: UUID // or String if you prefer: let id: String
+    let startDate: Date
+    let durationSeconds: Int
+}
+
 /*
  calculates properties -> how much time passed and left in time limit (seconds value and formated strings hh:mm:ss), fraction of time passed vs time limit
  public methods -> start(), stop()
@@ -101,6 +108,10 @@ class BindTimer{
         return _secondsPassedThisBind
     }
     
+    init() {
+        loadHistoryFromBundleJSON()
+    }
+    
     // Public Methods (accessible outside of this class) --------------------------------------------
    
     // resets timer values and starts timer
@@ -135,7 +146,7 @@ class BindTimer{
         // schedule notifications (should make this into a for loop or add private function helper
         if secondsLeftToday > 0 {
             // schedules notifications (note if timeLeftToday==0 at start of this timer, the notifications will be sent right away)
-            BindTimerNotification.scheduleNotification(identifier: "notification-1", seconds: TimeInterval(secondsLeftToday), title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
+            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-1", seconds: TimeInterval(secondsLeftToday), title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
             BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-2", seconds: TimeInterval(secondsLeftToday) + _secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
             BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-3", seconds: TimeInterval(secondsLeftToday) + Double(2)*_secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
             
@@ -146,9 +157,9 @@ class BindTimer{
     //            BindTimerNotification.scheduleNotification(identifier: id, seconds: TimeInterval(secondsLeft) + Double(i)*_secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
     //        }
         } else { // need a buffer, can not schedule notification in 0 seconds
-            BindTimerNotification.scheduleNotification(identifier: "notification-1", seconds: 10, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-2", seconds: 10 + _secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-3", seconds: 10 + Double(2)*_secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
+            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-1", seconds: 2, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
+            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-2", seconds: 2 + _secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
+            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-3", seconds: 2 + Double(2)*_secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
         }
     }
     
@@ -156,6 +167,8 @@ class BindTimer{
     private func _killTimer(){
         _timer?.invalidate()
         _timer = nil
+        // cancel pending limit notifications
+        BindTimerNotification.cancelScheduledLimitNotifications()
     }
     
     // updates private variables every tick
@@ -187,18 +200,32 @@ class BindTimer{
             .reduce(0) { $0 + $1.durationSeconds }
     }
     
-    // could use when restructuring to summary history
-//    private func updateTotalsHistoryList() {
-//        // Find the index of the first entry that matches today
-//        if let index = _bindSessionTotalsHistory.firstIndex(where: { Calendar.current.isDateInToday($0.startDate) }) {
-//            // Update the value at that specific index
-//            _bindSessionTotalsHistory[index].durationSeconds = _secondsPassedToday
-//            print("Updated totals history list with seconds passed today")
-//
-//        } else { // if no entry for today, then make one
-//            _bindSessionTotalsHistory.append(BindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedToday))
-//        }
-//    }
+    private func loadHistoryFromBundleJSON(fileName: String = "generatedBindData") {
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
+            print("generatedBindData.json not found in bundle")
+            return
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let decoded = try decoder.decode([BindSessionDTO].self, from: data)
+
+            // Map DTO -> BindSession (we ignore the JSON id and generate our own UUID like your struct does)
+            let mapped = decoded.map { dto in
+                BindSession(startDate: dto.startDate, durationSeconds: dto.durationSeconds)
+            }
+
+            // Replace or append, depending on your needs:
+            self._bindSessionHistory = mapped
+
+            // Optionally recompute today's running totals immediately
+            self._secondsPassedToday = self._totalSeconds(on: Date())
+            self._fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
+        } catch {
+            print("Failed to decode generatedBindData.json: \(error)")
+        }
+    }
 }
 
 private struct BindTimerKey: EnvironmentKey {
