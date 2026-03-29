@@ -54,15 +54,5 @@ class BindTimerNotification{
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         notificationCenter.add(request)
     }
-    
-    static func cancelScheduledLimitNotifications() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(
-            withIdentifiers: [
-                "time-limit-notification-1",
-                "time-limit-notification-2",
-                "time-limit-notification-3"
-                ]
-            )
-    }
 }
 
