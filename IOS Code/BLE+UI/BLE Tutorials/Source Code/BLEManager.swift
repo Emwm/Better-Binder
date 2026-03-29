@@ -23,7 +23,7 @@ final class BLEManager: NSObject {
 
     var devices: [Device] = []
     var statusText: String = "2034"
-    var statusInt: Double = 0
+    var statusInt: Double = 201
 
     struct Device: Identifiable, Hashable {
         let id: UUID

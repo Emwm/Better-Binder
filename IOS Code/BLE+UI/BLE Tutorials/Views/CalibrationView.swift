@@ -7,9 +7,9 @@
 
 import SwiftUI
 struct CalibrationView: View {
-    @AppStorage("minCompression") private var minPoint: Double = 500
+    @AppStorage("minCompression") private var minPoint: Double = 50
     @AppStorage("maxCompression") private var maxPoint: Double = 3500
-    @State private var ble = BLEManager()
+    @Environment(BLEManager.self) private var ble
     
     var body: some View {
         
@@ -22,7 +22,10 @@ struct CalibrationView: View {
             Gauge(value: compValue, in: 0...1){
                 Text("Value")
             } currentValueLabel: {
-                Text("\(Int(currentStatus))")
+                VStack{
+                    Text("Curent Value is \(Int(currentStatus))")
+                    Text("Computed Value is \(Double(compValue)*100)%")
+                }
             }
             //tint(fillColor(for: currentStatus))
             .gaugeStyle(.linearCapacity) // Or .accessoryCircular
@@ -31,7 +34,7 @@ struct CalibrationView: View {
         }
     }
     
-    private func DynPos(for value: Double) -> CGFloat {
+    private func DynPos(for value: Double) -> Double {
             let span = maxPoint - minPoint
             
             // Prevent division by zero if min and max are the same
@@ -72,4 +75,5 @@ struct MarkerIndicator: View {
 
 #Preview {
     CalibrationView()
+        .environment(BLEManager())
 }
