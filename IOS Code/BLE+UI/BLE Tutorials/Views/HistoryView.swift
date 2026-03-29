@@ -71,10 +71,16 @@ struct HistoryView: View {
     
     var body: some View {
         VStack{
-            Text("History") // list view of each bind today
-                .font(.title)
-                .bold()
-                .padding(.top, 10)
+            HStack{
+                Image("bBird")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50, height: 50)
+                Text("History") // list view of each bind today
+                    .font(.title)
+                    .bold()
+            }
+            .padding(.top, 10)
             
             // Daily totals chart ----------------
             Chart(dayTotals) { item in
@@ -82,7 +88,7 @@ struct HistoryView: View {
                     x: .value("Day", item.day, unit: .day),
                     y: .value("Total Seconds", item.totalSeconds)
                 )
-                .foregroundStyle(.indigo)
+                .foregroundStyle(.blue)
                 .cornerRadius(4)
                 .annotation(position: .top, alignment: .center) {
                     

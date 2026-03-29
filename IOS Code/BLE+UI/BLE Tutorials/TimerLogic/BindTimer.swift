@@ -72,11 +72,11 @@ class BindTimer{
     private var _numberOfNotificationsSent: Int = 0
     
     // limit variables (today)
-    private var _secondsBindLimit: TimeInterval = 30 // where 8 hour limit will go
+    private var _secondsBindLimit: TimeInterval = 20 // where 8 hour limit will go
     
     // limit variables (this bind)
     private var _notificationLimit: Int = 3
-    private var _secondsBetweenNotifications: TimeInterval = 20 // this value now for testing
+    private var _secondsBetweenNotifications: TimeInterval = 10 // this value now for testing
     
     // Initialize public properties (can access outside of this class) ---------------------------
     // this setup of public properties = private properties, allows private properties to be viewed but not changed outside of this class

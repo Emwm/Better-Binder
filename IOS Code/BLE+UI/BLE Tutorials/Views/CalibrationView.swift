@@ -16,11 +16,42 @@ struct CalibrationView: View {
         let currentStatus = Double(ble.statusInt)
         let compValue = DynPos(for: currentStatus)
 
-        VStack(spacing:30){
+        VStack{
             Text("Compression Calibration")
-                .font(.headline)
+                .font(.title)
+                .padding(.bottom, 15)
+                .bold()
+            
+            // setting max and min values ------------------
+            Text("Current Value: \(Int(currentStatus))")
+                .padding(.bottom, 5)
+                .font(.system(size: 20))
+                .bold()
+            HStack{
+                Text("Set as:")
+                    .padding(.bottom, 5)
+                    .font(.system(size: 20))
+                    .padding(.horizontal, 3)
+                Button("Min Value"){
+                    minPoint = currentStatus
+                }
+                    .buttonStyle(.bordered)
+                    .tint(.black)
+                    .font(.system(size: 20))
+                    .padding(.horizontal, 5)
+                
+                Button("Max Value"){
+                    maxPoint = currentStatus
+                }
+                    .buttonStyle(.bordered)
+                    .tint(.black)
+                    .font(.system(size: 20))
+                    .padding(.horizontal, 5)
+            }
+            
+            // gauge visual --------------------------
             Gauge(value: compValue, in: 0...1){
-                Text("Value")
+                Text("Compression State:")
             } currentValueLabel: {
                 VStack{
                     Text("Curent Value is \(Int(currentStatus))")
@@ -37,6 +68,7 @@ struct CalibrationView: View {
             .animation(.spring(), value: currentStatus)
             .padding()
         }
+        Spacer()
     }
     
     private func DynPos(for value: Double) -> Double {

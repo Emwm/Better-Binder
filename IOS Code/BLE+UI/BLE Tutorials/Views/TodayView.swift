@@ -21,7 +21,7 @@ private func _formatSeconds(_ seconds:Int) -> String {
     let hh: Int = seconds / 3600
     let mm: Int = (seconds % 3600) / 60
     let ss: Int = seconds % 60
-    return String(format: "\(hh):\(mm).\(ss)s")
+    return String(format: "%02d:%02d.%02ds", hh, mm, ss)
 }
 
 // helper function to change gauge color from green to blue
@@ -45,9 +45,15 @@ struct TodayView: View {
         VStack{
 
             // Top today text ---------------------------
-            Text("Today") // list view of each bind today
-                .font(.title)
-                .bold()
+            HStack{
+                Image("bwBird")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50, height: 50)
+                Text("Today") // list view of each bind today
+                    .font(.title)
+                    .bold()
+            }
                 .padding(.top, 10)
             
             Text(Date.now.formatted(date: .long, time: .omitted))
