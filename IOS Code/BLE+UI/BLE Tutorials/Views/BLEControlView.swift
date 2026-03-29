@@ -148,4 +148,5 @@ struct BLEControlView: View {
     }
 #Preview {
     BLEControlView()
+        .environment(BLEManager.mock)
 }
