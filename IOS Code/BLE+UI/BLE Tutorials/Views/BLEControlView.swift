@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BLEControlView: View {
-    @State private var ble = BLEManager()
+    @Environment(BLEManager.self) private var ble
     
     private var connectionLabel: String {
         if ble.isScanning { return "Scanning…" }
@@ -14,7 +14,7 @@ struct BLEControlView: View {
     }
     
     var body: some View {
-            VStack(spacing: 16) {
+            VStack(spacing: 16) {   
                 
                 // Status card
                 VStack(alignment: .leading, spacing: 10) {
@@ -148,4 +148,5 @@ struct BLEControlView: View {
     }
 #Preview {
     BLEControlView()
+        .environment(BLEManager.mock)
 }

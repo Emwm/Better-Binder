@@ -14,16 +14,14 @@ enum BLEIDs {
 
 // MARK: - Minimal observable manager
 @Observable
-final class BLEManager: NSObject {
-
-    // UI-facing state (minimal)
+final class BLEManager: NSObject, @unchecked Sendable {
+    // UI-facing state
     var isBluetoothOn = false
     var isScanning = false
     var isConnected = false
-
     var devices: [Device] = []
-    var statusText: String = "2034"
-    var statusInt: Double = 201
+    var statusText: String = "---"
+    var statusInt: Double = 0
 
     struct Device: Identifiable, Hashable {
         let id: UUID
@@ -32,20 +30,28 @@ final class BLEManager: NSObject {
     }
 
     // CoreBluetooth handles
-    private var central: CBCentralManager!
+    private var central: CBCentralManager?
     private var peripheral: CBPeripheral?
-
     private var cmdChar: CBCharacteristic?
     private var statusChar: CBCharacteristic?
 
-    override init() {
-        super.init()
-        central = CBCentralManager(delegate: self, queue: nil)
-    }
+    // Single Initializer with a default value
+    init(startCentral: Bool = true) {
+            super.init()
+            
+            // Detect if Xcode is running this for a preview
+            let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+            
+            // Only start the hardware stack if explicitly requested AND not in a preview
+            if startCentral && !isPreview {
+                self.central = CBCentralManager(delegate: self, queue: nil)
+            }
+        }
 
-    // MARK: - Public API (minimal)
+    // MARK: - Safe Public API
     func startScan() {
-        guard isBluetoothOn else { return }
+        // Use optional chaining to prevent crashes if central is nil
+        guard isBluetoothOn, let central = central else { return }
         devices.removeAll()
         isScanning = true
         central.scanForPeripherals(withServices: [BLEIDs.service], options: nil)
@@ -53,11 +59,12 @@ final class BLEManager: NSObject {
 
     func stopScan() {
         isScanning = false
-        central.stopScan()
+        central?.stopScan()
     }
 
     func connect(to device: Device) {
-        guard let p = central.retrievePeripherals(withIdentifiers: [device.id]).first else { return }
+        guard let central = central,
+              let p = central.retrievePeripherals(withIdentifiers: [device.id]).first else { return }
         stopScan()
         peripheral = p
         p.delegate = self
@@ -66,7 +73,7 @@ final class BLEManager: NSObject {
 
     func disconnect() {
         guard let p = peripheral else { return }
-        central.cancelPeripheralConnection(p)
+        central?.cancelPeripheralConnection(p)
     }
 
     func send(_ text: String) {
@@ -150,7 +157,7 @@ extension BLEManager: CBPeripheralDelegate {
             peripheral.setNotifyValue(true, for: statusChar)
         }
     }
-    //update thread
+    //UPDATE THREAD IMPORTANT
     func peripheral(_ peripheral: CBPeripheral,
                     didUpdateValueFor characteristic: CBCharacteristic,
                     error: Error?) {
@@ -174,5 +181,16 @@ extension BLEManager: CBPeripheralDelegate {
                 print("Failed to parse BLE data: '\(text)'")
             }
         }
+    }
+}
+
+extension BLEManager {
+    //fix my previews...
+    static var mock: BLEManager {
+        let manager = BLEManager(startCentral: false)
+        manager.statusInt = 1500 // Give it a sample value
+        manager.statusText = "1500"
+        manager.isConnected = true
+        return manager
     }
 }

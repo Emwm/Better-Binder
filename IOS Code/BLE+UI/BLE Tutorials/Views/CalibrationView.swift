@@ -13,7 +13,7 @@ struct CalibrationView: View {
     
     var body: some View {
         
-        let currentStatus = Double(ble.statusInt)
+        let currentStatus = (ble.statusInt)
         let compValue = DynPos(for: currentStatus)
 
         VStack(spacing:30){
@@ -24,8 +24,8 @@ struct CalibrationView: View {
             } currentValueLabel: {
                 VStack{
                     Text("Curent Value is \(Int(currentStatus))")
-                    Text("Computed Value is \(Double(compValue)*100)%")
-                    Text("Raw Int: \(ble.statusInt)")
+                    Text("Computed Value is \((compValue)*100)%")
+                    Text("Raw Int: \(ble.statusText)")
                             .font(.caption)
                             .foregroundColor(.gray)
                     
@@ -80,5 +80,6 @@ struct MarkerIndicator: View {
 
 #Preview {
     CalibrationView()
-        .environment(BLEManager())
+        .environment(BLEManager.mock)
 }
+
