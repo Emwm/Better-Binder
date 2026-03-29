@@ -11,6 +11,7 @@
 		5C2793752F78717D006DDB32 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793742F78717A006DDB32 /* TodayView.swift */; };
 		5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793772F7871B6006DDB32 /* BindTimer.swift */; };
 		5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793792F7871DC006DDB32 /* BindTimerNotification.swift */; };
+		5C2793942F78A654006DDB32 /* CalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793932F78A654006DDB32 /* CalibrationView.swift */; };
 		5CB017942F6CC14700D50145 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB017932F6CC14700D50145 /* MainTabView.swift */; };
 		5CB017962F6CC99B00D50145 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB017952F6CC99B00D50145 /* SettingsView.swift */; };
 		E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */; };
@@ -41,6 +42,7 @@
 		5C2793742F78717A006DDB32 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		5C2793772F7871B6006DDB32 /* BindTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimer.swift; sourceTree = "<group>"; };
 		5C2793792F7871DC006DDB32 /* BindTimerNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimerNotification.swift; sourceTree = "<group>"; };
+		5C2793932F78A654006DDB32 /* CalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationView.swift; sourceTree = "<group>"; };
 		5CB017932F6CC14700D50145 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		5CB017952F6CC99B00D50145 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E33E76612F3BC0E6008D27B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 			isa = PBXGroup;
 			children = (
 				E33E76632F3BC0E6008D27B5 /* BLEManager.swift */,
+				5C2793932F78A654006DDB32 /* CalibrationView.swift */,
 			);
 			path = "Source Code";
 			sourceTree = "<group>";
@@ -296,6 +299,7 @@
 				5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */,
 				5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */,
 				5CB017962F6CC99B00D50145 /* SettingsView.swift in Sources */,
+				5C2793942F78A654006DDB32 /* CalibrationView.swift in Sources */,
 				5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */,
 				E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */,
 				5C2793752F78717D006DDB32 /* TodayView.swift in Sources */,
