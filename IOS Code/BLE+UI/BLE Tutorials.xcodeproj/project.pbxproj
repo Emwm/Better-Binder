@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0EC3E0022F7897BE00E0C495 /* NotificationControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */; };
 		0EC3E0042F78996300E0C495 /* TestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC3E0032F78994E00E0C495 /* TestTimerView.swift */; };
+		5C1314212F79F986004884C4 /* JournalHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1314202F79F97C004884C4 /* JournalHistoryView.swift */; };
 		5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793722F787149006DDB32 /* HistoryView.swift */; };
 		5C2793752F78717D006DDB32 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793742F78717A006DDB32 /* TodayView.swift */; };
 		5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793772F7871B6006DDB32 /* BindTimer.swift */; };
@@ -42,6 +43,7 @@
 /* Begin PBXFileReference section */
 		0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationControlView.swift; sourceTree = "<group>"; };
 		0EC3E0032F78994E00E0C495 /* TestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestTimerView.swift; sourceTree = "<group>"; };
+		5C1314202F79F97C004884C4 /* JournalHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalHistoryView.swift; sourceTree = "<group>"; };
 		5C2793722F787149006DDB32 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		5C2793742F78717A006DDB32 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		5C2793772F7871B6006DDB32 /* BindTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimer.swift; sourceTree = "<group>"; };
@@ -62,6 +64,11 @@
 		0EC3DFE32F788C0E00E0C495 /* Generated Data */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Generated Data";
+			sourceTree = "<group>";
+		};
+		5C1314162F79F688004884C4 /* Journal Logic */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Journal Logic";
 			sourceTree = "<group>";
 		};
 		E3F9F87E2E9D591C00C7573A /* BLE TutorialsTests */ = {
@@ -127,6 +134,7 @@
 				0EC3DFE32F788C0E00E0C495 /* Generated Data */,
 				E33E766C2F3BC0EA008D27B5 /* Views */,
 				5C2793762F78719D006DDB32 /* TimerLogic */,
+				5C1314162F79F688004884C4 /* Journal Logic */,
 				5CB0178C2F6CB8D500D50145 /* Source Code */,
 			);
 			path = "BLE Tutorials";
@@ -135,6 +143,7 @@
 		E33E766C2F3BC0EA008D27B5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				5C1314202F79F97C004884C4 /* JournalHistoryView.swift */,
 				0EC3E0032F78994E00E0C495 /* TestTimerView.swift */,
 				5C2793742F78717A006DDB32 /* TodayView.swift */,
 				0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */,
@@ -183,6 +192,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				0EC3DFE32F788C0E00E0C495 /* Generated Data */,
+				5C1314162F79F688004884C4 /* Journal Logic */,
 			);
 			name = "BLE Tutorials";
 			packageProductDependencies = (
@@ -312,6 +322,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */,
+				5C1314212F79F986004884C4 /* JournalHistoryView.swift in Sources */,
 				5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */,
 				5CB017962F6CC99B00D50145 /* SettingsView.swift in Sources */,
 				5C2793942F78A654006DDB32 /* CalibrationView.swift in Sources */,
@@ -487,6 +498,7 @@
 				DEVELOPMENT_TEAM = QC5586RP8J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "The Better Binder";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "All the reasons";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -521,6 +533,7 @@
 				DEVELOPMENT_TEAM = QC5586RP8J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "The Better Binder";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "All the reasons";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
