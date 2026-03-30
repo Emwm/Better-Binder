@@ -7,14 +7,14 @@
 
 import SwiftUI
 struct CalibrationView: View {
-    @AppStorage("minCompression") private var minPoint: Double = 50
-    @AppStorage("maxCompression") private var maxPoint: Double = 3500
     @Environment(BindManager.self) private var bsm
     
     var body: some View {
         
-        let currentStatus = Double(bsm.rawValue)
+        let currentStatus = Double(bsm.rawInt)
         let compValue = Double(bsm.perCompression)
+        let minPoint = Double(bsm.minValue)
+        let maxPoint = Double(bsm.maxValue)
 
         VStack{
                     Text("Compression Calibration")
@@ -23,7 +23,7 @@ struct CalibrationView: View {
                         .bold()
             
                     // gauge visual --------------------------
-                    Gauge(value: compValue+0.1, in: 0...1.2){
+            Gauge(value: compValue+0.1, in: 0...1.2){
                         Text("Compression State:")
                             .padding(.bottom, 5)
                             .font(.system(size: 25))
@@ -32,7 +32,7 @@ struct CalibrationView: View {
                             .font(.system(size: 20))
                         
                         //String(format: "%02d:%02d.%02ds", hh, mm, ss)
-                        Text("\(Decimal(compValue*100).formatted(.number.precision(.fractionLength(0...2))))%")
+                        Text("\(Decimal(compValue*100).formatted(.number.precision(.fractionLength(0))))%")
                             .font(.system(size: 20))
                             .padding(.bottom, 10)
                             .bold()
@@ -72,7 +72,7 @@ struct CalibrationView: View {
                                     .padding(.bottom, 5)
                                     .font(.system(size: 20))
                                 Button("Min Value"){
-                                    minPoint = currentStatus
+                                    bsm.minChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
                                     .tint(.blue)
@@ -83,7 +83,7 @@ struct CalibrationView: View {
                                     
                                 
                                 Button("Max Value"){
-                                    maxPoint = currentStatus
+                                    bsm.maxChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
                                     .tint(.blue)

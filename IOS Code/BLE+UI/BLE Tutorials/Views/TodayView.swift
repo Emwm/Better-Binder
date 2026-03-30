@@ -38,6 +38,7 @@ private func _colorForProgress(_ p: Double) -> Color {
 struct TodayView: View {
     // state properties here -----------------------------------
     
+    @Environment(BindManager.self) private var bsm
     @Environment(\.bindTimer) private var timer
     // public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
     
@@ -60,11 +61,11 @@ struct TodayView: View {
                 .font(.system(size: 25))
                 .padding(.bottom,20)
             
-            // Time binded ---------------------------------
-            Text("Time Binded:")
+            // Time today of binding ---------------------------------
+            Text("Binding Time:")
                 .font(.system(size: 25))
                 .bold()
-                .padding(.bottom, 5)
+                .padding(.bottom, 2)
             Text("\(timer.secondsPassedTodayString)") // total time today
                 .font(.system(size: 25))
                 .padding(.bottom, 5)
@@ -88,7 +89,17 @@ struct TodayView: View {
             .padding(.horizontal)
             .padding(.bottom, 20)
             
-            // List View ----------------------------
+            // Current binding state --------------------
+            HStack{
+                Text("Current Binding State:")
+                    .font(.system(size: 20))
+                Text("\(String(describing: bsm.currentState))")
+                    .font(.system(size: 20))
+                    .bold()
+            }
+                .padding(.bottom, 10)
+            
+            // List View of today binding history ----------------------------
             Text("List of Binds Today:") // list view of each bind today
                 .font(.system(size: 25))
                 .padding(.bottom, 5)
@@ -142,4 +153,5 @@ struct TodayView: View {
 }
 #Preview {
     TodayView()
+        .environment(BindManager())
 }

@@ -14,6 +14,7 @@ struct MainTabView: View {
     //ble update observables
     @Environment(BLEManager.self) private var ble
     @Environment(BindManager.self) private var bsm
+    @Environment(\.bindTimer) private var timer
 
     var body: some View {
         TabView(selection: $selectedTab){
@@ -30,7 +31,7 @@ struct MainTabView: View {
         }
         //global binding updates, important
         .onChange(of: ble.statusInt) { oldValue, newValue in
-            bsm.setRawValue(for: newValue)
+            bsm.setRawInt(for: newValue, timer: timer)
         }
     }
 }
