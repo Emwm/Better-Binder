@@ -10,6 +10,11 @@ import SwiftUI
 struct MainTabView: View {
         
     @State private var selectedTab = 1
+    
+    //ble update observables
+    @Environment(BLEManager.self) private var ble
+    @Environment(BindManager.self) private var bsm
+
     var body: some View {
         TabView(selection: $selectedTab){
             Tab("History", systemImage:"calendar", value: 0 ){
@@ -23,6 +28,10 @@ struct MainTabView: View {
             }
             
         }
+        //global binding updates, important
+        .onChange(of: ble.statusInt) { oldValue, newValue in
+            bsm.setRawValue(for: newValue)
+        }
     }
 }
 
@@ -30,4 +39,5 @@ struct MainTabView: View {
     MainTabView()
         .environment(BLEManager.mock)
         .environment(BindTimer())
+        .environment(BindManager())
 }

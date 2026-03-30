@@ -9,12 +9,12 @@ import SwiftUI
 struct CalibrationView: View {
     @AppStorage("minCompression") private var minPoint: Double = 50
     @AppStorage("maxCompression") private var maxPoint: Double = 3500
-    @Environment(BLEManager.self) private var ble
+    @Environment(BindManager.self) private var bsm
     
     var body: some View {
         
-        let currentStatus = Double(ble.statusInt)
-        let compValue = DynPos(for: currentStatus)
+        let currentStatus = Double(bsm.rawValue)
+        let compValue = Double(bsm.perCompression)
 
         VStack{
                     Text("Compression Calibration")
@@ -98,24 +98,10 @@ struct CalibrationView: View {
                 Spacer()
     }
     
-    private func DynPos(for value: Double) -> Double {
-            let span = maxPoint - minPoint
-            
-            // Prevent division by zero if min and max are the same
-            guard span != 0 else { return 0 }
-            
-            // Calculate percentage: (Current - Min) / Span
-            let percentage = (value - minPoint) / span
-            
-            // Clamp it between 0 and 1 so the bar doesn't break the UI
-            let clampedPercentage = max(0, min(percentage, 1.0))
-            
-            return clampedPercentage
-        }
     
     private func fillColor(for value: Double) -> Color {
-            if value < minPoint { return .orange }
-            if value > maxPoint { return .red }
+        if value < 0.9 { return .orange }
+        if value > 0.1 { return .red }
             return .green // Within the "Set" compression range
         }
 }
@@ -139,5 +125,5 @@ struct MarkerIndicator: View {
 
 #Preview {
     CalibrationView()
-        .environment(BLEManager.mock)
+        .environment(BindManager())
 }

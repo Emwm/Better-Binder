@@ -11,12 +11,14 @@ import SwiftUI
 struct BLE_TutorialsApp: App {
     @State private var ble = BLEManager()
     @State private var timer = BindTimer()
+    @State private var bsm = BindManager()
     
     var body: some Scene {
         WindowGroup {
             MainTabView()
                 .environment(ble)
                 .environment(\.bindTimer, timer)
+                .environment(bsm)
         }
     }
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E69A3132F79F5C4001FE064 /* BindManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E69A3122F79F5BF001FE064 /* BindManager.swift */; };
 		0EC3E0022F7897BE00E0C495 /* NotificationControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */; };
 		0EC3E0042F78996300E0C495 /* TestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC3E0032F78994E00E0C495 /* TestTimerView.swift */; };
 		5C1314212F79F986004884C4 /* JournalHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1314202F79F97C004884C4 /* JournalHistoryView.swift */; };
@@ -41,6 +42,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0E69A3122F79F5BF001FE064 /* BindManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindManager.swift; sourceTree = "<group>"; };
 		0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationControlView.swift; sourceTree = "<group>"; };
 		0EC3E0032F78994E00E0C495 /* TestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestTimerView.swift; sourceTree = "<group>"; };
 		5C1314202F79F97C004884C4 /* JournalHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalHistoryView.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 		5CB0178C2F6CB8D500D50145 /* Source Code */ = {
 			isa = PBXGroup;
 			children = (
+				0E69A3122F79F5BF001FE064 /* BindManager.swift */,
 				E33E76632F3BC0E6008D27B5 /* BLEManager.swift */,
 			);
 			path = "Source Code";
@@ -325,6 +328,7 @@
 				5C1314212F79F986004884C4 /* JournalHistoryView.swift in Sources */,
 				5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */,
 				5CB017962F6CC99B00D50145 /* SettingsView.swift in Sources */,
+				0E69A3132F79F5C4001FE064 /* BindManager.swift in Sources */,
 				5C2793942F78A654006DDB32 /* CalibrationView.swift in Sources */,
 				0EC3E0022F7897BE00E0C495 /* NotificationControlView.swift in Sources */,
 				5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */,
