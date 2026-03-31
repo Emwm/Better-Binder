@@ -15,7 +15,8 @@ struct BLEControlView: View {
     
     var body: some View {
             VStack(spacing: 16) {
-                
+                Text("Device Status")
+                    .font(Font.largeTitle.bold())
                 // Status card
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 10) {

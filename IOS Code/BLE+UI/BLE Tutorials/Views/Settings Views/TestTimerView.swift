@@ -11,8 +11,10 @@ struct TestTimerView: View {
     @Environment(\.bindTimer) private var timer
     // public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
     
+    @State private var newTimeLimit = 0.0
+    
     var body: some View {
-        // Testing Block ----------------------------
+        // Timer Block ----------------------------
         ZStack{
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color(.systemGray5))
@@ -42,5 +44,32 @@ struct TestTimerView: View {
             }
         }
         .padding(.horizontal)
+        
+//        // Set new Timer Limit
+//        ZStack{
+//            RoundedRectangle(cornerRadius: 14)
+//                .fill(Color(.systemGray5))
+//                .frame(width: 350, height: 140) // minimum size
+//            
+//            VStack(spacing: 5){
+//                // temporary timer via buttons for testing
+//                Text("Set New Binding Limit")
+//                    .font(.system(size: 20))
+//                    .bold()
+//                HStack{
+//                    TextField("Enter minutes", value: $newTimeLimit, format: .number)
+//                    Button("ADD"){
+//                        timer.setDailyBindLimit(seconds: newTimeLimit)
+//                    }
+//                    .buttonStyle(.borderedProminent)
+//                }
+//                
+//            }
+//        }
+//        .padding(.horizontal)
     }
+}
+#Preview {
+    TestTimerView()
+        .environment(BindManager())
 }

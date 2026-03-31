@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MainTabView: View {
         
-    @State private var selectedTab = 1
+    @State private var selectedTab = 0
     
     //ble update observables
     @Environment(BLEManager.self) private var ble
@@ -18,13 +18,16 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab){
-            Tab("History", systemImage:"calendar", value: 0 ){
-                HistoryView()
-            }
-            Tab("Today", systemImage:"chart.xyaxis.line", value: 1){
+            Tab("Today", systemImage:"chart.xyaxis.line", value: 0){
                 TodayView()
             }
-            Tab("Settings", systemImage:"gear", value: 2){
+            Tab("Journal", systemImage: "book", value: 1){
+                JournalListView()
+            }
+            Tab("History", systemImage:"calendar", value: 2 ){
+                HistoryView()
+            }
+            Tab("Settings", systemImage:"gear", value: 3){
                 SettingsView()
             }
             

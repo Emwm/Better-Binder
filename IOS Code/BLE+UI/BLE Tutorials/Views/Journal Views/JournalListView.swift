@@ -1,8 +1,8 @@
 //
-//  JournalHistoryView.swift
+//  JournalListView.swift
 //  BLE Tutorials
 //
-//  Created by LOGIN on 2026-03-29.
+//  Created by Reese Brogden on 3/30/26.
 //
 
 import Foundation
@@ -14,6 +14,25 @@ struct JournalListView: View {
 
     var body: some View {
         NavigationStack {
+            VStack{
+                HStack{
+                    Image("bwBird")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                    Text("Journal")
+                        .font(Font.largeTitle.bold())
+                    Image("bwBird")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                        .scaleEffect(x: -1, y: 1)
+                }
+                Text("Create a journal entry to reflect on how you felt binding today.")
+                    .font(Font.body)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 300)
+            }
             List(allEntries) { entry in
                 VStack{
                     Text(entry.date.formatted(date: .abbreviated, time: .shortened))
@@ -24,7 +43,6 @@ struct JournalListView: View {
                         .lineLimit(3) // Show a preview
                 }
             }
-            .navigationTitle("Journal")
             .toolbar {
                 Button(action: { isShowingEditor = true }) {
                     Image(systemName: "plus")

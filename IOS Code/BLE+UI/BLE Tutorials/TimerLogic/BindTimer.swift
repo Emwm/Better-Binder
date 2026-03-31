@@ -43,7 +43,7 @@ private struct BindSessionDTO: Codable {
 
 /*
  calculates properties -> how much time passed and left in time limit (seconds value and formated strings hh:mm:ss), fraction of time passed vs time limit
- public methods -> start(), stop()
+ public methods -> start(), stop(), setDailyBindLimit()
  public varaibles -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
  private methods -> _createTimer(), _killTimer(), _onTick(), _formatSeconds(_ seconds:Int), _totalSeconds(on day: Date)
  */
@@ -72,7 +72,7 @@ class BindTimer{
     private var _numberOfNotificationsSent: Int = 0
     
     // limit variables (today)
-    private var _secondsBindLimit: TimeInterval = 20 // where 8 hour limit will go
+    private var _secondsBindLimit: TimeInterval = 30 // where 8 hour limit will go
     
     // limit variables (this bind)
     private var _notificationLimit: Int = 3
@@ -132,6 +132,13 @@ class BindTimer{
         _secondsPassedThisBind = 0
         _state = .idle
         _killTimer()
+    }
+    
+    func setDailyBindLimit(seconds: TimeInterval) {
+        _secondsBindLimit = seconds
+        // Recompute derived values that depend on the limit
+        _secondsPassedToday = _totalSeconds(on: Date())
+        _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
     }
     
     // Private Methods (accessible only inside of this class) --------------------------------------------

@@ -17,7 +17,7 @@ private func _formatSeconds(_ seconds:Int) -> String {
     let hh: Int = seconds / 3600
     let mm: Int = (seconds % 3600) / 60
     let ss: Int = seconds % 60
-    return String(format: "%02d:%02d.%02ds", hh, mm, ss)
+    return String(format: "%02d:%02d:%02d", hh, mm, ss)
 }
 
 // A simple model for charting daily totals
@@ -77,7 +77,7 @@ struct HistoryView: View {
                     .scaledToFit()
                     .frame(width: 50, height: 50)
                 Text("History") // list view of each bind today
-                    .font(.title)
+                    .font(Font.largeTitle.bold())
                     .bold()
             }
             .padding(.top, 10)

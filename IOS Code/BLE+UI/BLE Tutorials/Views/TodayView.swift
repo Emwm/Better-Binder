@@ -21,7 +21,7 @@ private func _formatSeconds(_ seconds:Int) -> String {
     let hh: Int = seconds / 3600
     let mm: Int = (seconds % 3600) / 60
     let ss: Int = seconds % 60
-    return String(format: "%02d:%02d.%02ds", hh, mm, ss)
+    return String(format: "%02d:%02d:%02d", hh, mm, ss)
 }
 
 // helper function to change gauge color from green to blue
@@ -52,8 +52,7 @@ struct TodayView: View {
                     .scaledToFit()
                     .frame(width: 50, height: 50)
                 Text("Today") // list view of each bind today
-                    .font(.title)
-                    .bold()
+                    .font(Font.largeTitle.bold())
             }
                 .padding(.top, 10)
             
@@ -62,7 +61,7 @@ struct TodayView: View {
                 .padding(.bottom,20)
             
             // Time today of binding ---------------------------------
-            Text("Binding Time:")
+            Text("Total Binding Time:")
                 .font(.system(size: 25))
                 .bold()
                 .padding(.bottom, 2)
@@ -91,16 +90,15 @@ struct TodayView: View {
             
             // Current binding state --------------------
             HStack{
-                Text("Current Binding State:")
+                Text("Current Compression State:")
                     .font(.system(size: 20))
                 Text("\(String(describing: bsm.currentState))")
                     .font(.system(size: 20))
-                    .bold()
             }
                 .padding(.bottom, 10)
             
             // List View of today binding history ----------------------------
-            Text("List of Binds Today:") // list view of each bind today
+            Text("List of Bind Sessions:") // list view of each bind today
                 .font(.system(size: 25))
                 .padding(.bottom, 5)
             
@@ -117,6 +115,8 @@ struct TodayView: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped) // or .plain, .grouped, etc.
+            .frame(height: 300)       // choose a height that fits your design
             
             // Testing Block ----------------------------
 //            ZStack{

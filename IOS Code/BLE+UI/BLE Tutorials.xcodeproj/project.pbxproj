@@ -8,20 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		0E69A3132F79F5C4001FE064 /* BindManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E69A3122F79F5BF001FE064 /* BindManager.swift */; };
-		0EC3E0022F7897BE00E0C495 /* NotificationControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */; };
-		0EC3E0042F78996300E0C495 /* TestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC3E0032F78994E00E0C495 /* TestTimerView.swift */; };
-		5C1314212F79F986004884C4 /* JournalHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1314202F79F97C004884C4 /* JournalHistoryView.swift */; };
 		5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793722F787149006DDB32 /* HistoryView.swift */; };
 		5C2793752F78717D006DDB32 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793742F78717A006DDB32 /* TodayView.swift */; };
 		5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793772F7871B6006DDB32 /* BindTimer.swift */; };
 		5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793792F7871DC006DDB32 /* BindTimerNotification.swift */; };
-		5C2793942F78A654006DDB32 /* CalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793932F78A654006DDB32 /* CalibrationView.swift */; };
 		5CB017942F6CC14700D50145 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB017932F6CC14700D50145 /* MainTabView.swift */; };
-		5CB017962F6CC99B00D50145 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB017952F6CC99B00D50145 /* SettingsView.swift */; };
 		E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */; };
 		E33E76682F3BC0E6008D27B5 /* BLEManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E76632F3BC0E6008D27B5 /* BLEManager.swift */; };
 		E33E766B2F3BC0E6008D27B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E33E76612F3BC0E6008D27B5 /* Assets.xcassets */; };
-		E33E766E2F3BC368008D27B5 /* BLEControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E766D2F3BC368008D27B5 /* BLEControlView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,34 +37,33 @@
 
 /* Begin PBXFileReference section */
 		0E69A3122F79F5BF001FE064 /* BindManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindManager.swift; sourceTree = "<group>"; };
-		0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationControlView.swift; sourceTree = "<group>"; };
-		0EC3E0032F78994E00E0C495 /* TestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestTimerView.swift; sourceTree = "<group>"; };
-		5C1314202F79F97C004884C4 /* JournalHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalHistoryView.swift; sourceTree = "<group>"; };
 		5C2793722F787149006DDB32 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		5C2793742F78717A006DDB32 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		5C2793772F7871B6006DDB32 /* BindTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimer.swift; sourceTree = "<group>"; };
 		5C2793792F7871DC006DDB32 /* BindTimerNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimerNotification.swift; sourceTree = "<group>"; };
-		5C2793932F78A654006DDB32 /* CalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationView.swift; sourceTree = "<group>"; };
 		5CB017932F6CC14700D50145 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		5CB017952F6CC99B00D50145 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E33E76612F3BC0E6008D27B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLE_TutorialsApp.swift; sourceTree = "<group>"; };
 		E33E76632F3BC0E6008D27B5 /* BLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEManager.swift; sourceTree = "<group>"; };
-		E33E766D2F3BC368008D27B5 /* BLEControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEControlView.swift; sourceTree = "<group>"; };
 		E3F9F86E2E9D591A00C7573A /* BLE Tutorials.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "BLE Tutorials.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3F9F87B2E9D591C00C7573A /* BLE TutorialsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BLE TutorialsTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3F9F8852E9D591C00C7573A /* BLE TutorialsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BLE TutorialsUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		0E5AE45A2F7B40B40087676E /* Settings Views */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Settings Views";
+			sourceTree = "<group>";
+		};
+		0E5AE45B2F7B40DE0087676E /* Journal Views */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Journal Views";
+			sourceTree = "<group>";
+		};
 		0EC3DFE32F788C0E00E0C495 /* Generated Data */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Generated Data";
-			sourceTree = "<group>";
-		};
-		5C1314162F79F688004884C4 /* Journal Logic */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Journal Logic";
 			sourceTree = "<group>";
 		};
 		E3F9F87E2E9D591C00C7573A /* BLE TutorialsTests */ = {
@@ -137,7 +130,6 @@
 				0EC3DFE32F788C0E00E0C495 /* Generated Data */,
 				E33E766C2F3BC0EA008D27B5 /* Views */,
 				5C2793762F78719D006DDB32 /* TimerLogic */,
-				5C1314162F79F688004884C4 /* Journal Logic */,
 				5CB0178C2F6CB8D500D50145 /* Source Code */,
 			);
 			path = "BLE Tutorials";
@@ -146,14 +138,10 @@
 		E33E766C2F3BC0EA008D27B5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				5C1314202F79F97C004884C4 /* JournalHistoryView.swift */,
-				0EC3E0032F78994E00E0C495 /* TestTimerView.swift */,
+				0E5AE45B2F7B40DE0087676E /* Journal Views */,
+				0E5AE45A2F7B40B40087676E /* Settings Views */,
 				5C2793742F78717A006DDB32 /* TodayView.swift */,
-				0EC3E0012F7897B700E0C495 /* NotificationControlView.swift */,
 				5C2793722F787149006DDB32 /* HistoryView.swift */,
-				E33E766D2F3BC368008D27B5 /* BLEControlView.swift */,
-				5CB017952F6CC99B00D50145 /* SettingsView.swift */,
-				5C2793932F78A654006DDB32 /* CalibrationView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -194,8 +182,9 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				0E5AE45A2F7B40B40087676E /* Settings Views */,
+				0E5AE45B2F7B40DE0087676E /* Journal Views */,
 				0EC3DFE32F788C0E00E0C495 /* Generated Data */,
-				5C1314162F79F688004884C4 /* Journal Logic */,
 			);
 			name = "BLE Tutorials";
 			packageProductDependencies = (
@@ -325,18 +314,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */,
-				5C1314212F79F986004884C4 /* JournalHistoryView.swift in Sources */,
 				5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */,
-				5CB017962F6CC99B00D50145 /* SettingsView.swift in Sources */,
 				0E69A3132F79F5C4001FE064 /* BindManager.swift in Sources */,
-				5C2793942F78A654006DDB32 /* CalibrationView.swift in Sources */,
-				0EC3E0022F7897BE00E0C495 /* NotificationControlView.swift in Sources */,
 				5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */,
 				E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */,
-				0EC3E0042F78996300E0C495 /* TestTimerView.swift in Sources */,
 				5C2793752F78717D006DDB32 /* TodayView.swift in Sources */,
 				E33E76682F3BC0E6008D27B5 /* BLEManager.swift in Sources */,
-				E33E766E2F3BC368008D27B5 /* BLEControlView.swift in Sources */,
 				5CB017942F6CC14700D50145 /* MainTabView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -1,8 +1,8 @@
 //
-//  Journaling.swift
+//  JournalEntryView.swift
 //  BLE Tutorials
 //
-//  Created by LOGIN on 2026-03-29.
+//  Created by Reese Brogden on 3/30/26.
 //
 
 import Foundation

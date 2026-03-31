@@ -17,17 +17,20 @@ struct CalibrationView: View {
         let maxPoint = Double(bsm.maxValue)
 
         VStack{
-                    Text("Compression Calibration")
-                        .font(.title)
-                        .padding(.bottom, 10)
-                        .bold()
+            Text("Compression Calibration")
+                .font(Font.title)
+                .padding(10)
+                .bold()
+        
+            Text("Current Compression State:")
+                .font(.system(size: 20))
+            Text("\(String(describing: bsm.currentState))")
+                .font(.system(size: 20))
+                .bold()
+                .padding(.bottom,10)
             
-                    // gauge visual --------------------------
+            // gauge visual --------------------------
             Gauge(value: compValue+0.1, in: 0...1.2){
-                        Text("Compression State:")
-                            .padding(.bottom, 5)
-                            .font(.system(size: 25))
-                            .bold()
                         Text("Percentage Compressed:")
                             .font(.system(size: 20))
                         
@@ -75,7 +78,7 @@ struct CalibrationView: View {
                                     bsm.minChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
-                                    .tint(.blue)
+                                    .tint(.blue.opacity(0.9))
                                     .foregroundStyle(.white)
                                     .font(.system(size: 20))
                                     .padding(.horizontal, 5)
@@ -86,7 +89,7 @@ struct CalibrationView: View {
                                     bsm.maxChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
-                                    .tint(.blue)
+                                    .tint(.blue.opacity(0.9))
                                     .foregroundStyle(.white)
                                     .font(.system(size: 20))
                                     .padding(.horizontal, 5)
