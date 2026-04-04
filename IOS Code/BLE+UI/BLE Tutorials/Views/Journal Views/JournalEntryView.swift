@@ -26,17 +26,29 @@ struct NewEntryView: View {
     var body: some View {
         NavigationStack {
             VStack{
-                Image("bBird")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 50, height: 50)
-                // Show the user the time, but don't let them edit it
                 Text("New Journal Entry")
-                    .font(.system(.title))
-                    .padding(5)
-                Text("Entry for \(timestamp.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.system(size: 20))
-                    .padding(.horizontal)
+                    .font(.appSubHeader())
+                    .smallPaddingBottom()
+                HStack{
+                    Image("logo_solidFill_coral")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .padding(.horizontal)
+                        
+                    Spacer()
+                    Text("\(timestamp.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.appBody())
+                    Spacer()
+                    Image("logo_solidFill_coral")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .padding(.horizontal)
+                        .scaleEffect(x: -1, y: 1)
+                }
+                .smallPaddingBottom()
+                
                 ZStack{
                     TextEditor(text: $entryText)
                         .overlay(

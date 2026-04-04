@@ -16,31 +16,32 @@ struct JournalListView: View {
         NavigationStack {
             VStack{
                 HStack{
-                    Image("bwBird")
+                    Image("logo_solidOutline_coral")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 50, height: 50)
                     Text("Journal")
-                        .font(Font.largeTitle.bold())
-                    Image("bwBird")
+                        .font(.appHeader())
+                    Image("logo_solidOutline_coral")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 50, height: 50)
                         .scaleEffect(x: -1, y: 1)
                 }
                 Text("Create a journal entry to reflect on how you felt binding today.")
-                    .font(Font.body)
+                    .font(.appBody())
                     .multilineTextAlignment(.center)
                     .frame(width: 300)
             }
             List(allEntries) { entry in
-                VStack{
+                VStack(alignment: .leading){
                     Text(entry.date.formatted(date: .abbreviated, time: .shortened))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.appBodyBold())
+                        .smallPaddingBottom()
                     
                     Text(entry.text)
                         .lineLimit(3) // Show a preview
+                        .font(.appBody())
                 }
             }
             .toolbar {

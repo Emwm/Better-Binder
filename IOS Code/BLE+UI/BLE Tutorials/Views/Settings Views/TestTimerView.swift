@@ -15,35 +15,44 @@ struct TestTimerView: View {
     
     var body: some View {
         // Timer Block ----------------------------
-        ZStack{
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(.systemGray5))
-                .frame(width: 350, height: 140) // minimum size
-            
-            VStack(spacing: 5){
-                // temporary timer via buttons for testing
-                Text("Temporary For Timer Testing")
-                    .font(.system(size: 20))
-                    .bold()
-                Text("Time of this Bind:")
-                    .font(.system(size: 20))
-                Text("\(timer.secondsPassedThisBind)") // time of this bind running here
-                    .font(.system(size: 20))
-                if timer.state == .idle{
-                    Button("START"){
-                        timer.start()
+        VStack{
+            Text("Manual Timer")
+                .font(.appHeader())
+                .largePaddingTop()
+            Text("for the today page")
+                .font(.appBody())
+                .largePaddingBottom()
+            ZStack{
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 350, height: 160) // minimum size
+                
+                VStack(spacing: 5){
+                    // temporary timer via buttons for testing
+                    Text("Time of this Bind:")
+                        .font(.appBodyBold())
+                    Text("\(timer.secondsPassedThisBind)") // time of this bind running here
+                        .font(.appBody())
+                        .mediumPaddingBottom()
+                    if timer.state == .idle{
+                        Button("START"){
+                            timer.start()
+                        }
+                            .buttonStyle(.borderedProminent)
+                            .font(.appBody())
                     }
-                        .buttonStyle(.borderedProminent)
-                }
-                if timer.state == .running{
-                    Button("STOP"){
-                        timer.stop()
+                    if timer.state == .running{
+                        Button("STOP"){
+                            timer.stop()
+                        }
+                            .buttonStyle(.borderedProminent)
+                            .font(.appBody())
                     }
-                        .buttonStyle(.borderedProminent)
                 }
             }
+            .padding(.horizontal)
+            Spacer()
         }
-        .padding(.horizontal)
         
 //        // Set new Timer Limit
 //        ZStack{

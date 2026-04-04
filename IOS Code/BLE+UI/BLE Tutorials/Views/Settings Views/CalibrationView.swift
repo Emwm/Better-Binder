@@ -17,36 +17,36 @@ struct CalibrationView: View {
         let maxPoint = Double(bsm.maxValue)
 
         VStack{
-            Text("Compression Calibration")
-                .font(Font.title)
-                .padding(10)
-                .bold()
+            Text("Compression")
+                .font(.appHeader())
+                .largePaddingTop()
+            Text("Calibration")
+                .font(.appHeader())
+                .largePaddingBottom()
         
             Text("Current Compression State:")
-                .font(.system(size: 20))
+                .font(.appBody())
             Text("\(String(describing: bsm.currentState))")
-                .font(.system(size: 20))
-                .bold()
-                .padding(.bottom,10)
+                .font(.appBodyBold())
+                .mediumPaddingBottom()
             
             // gauge visual --------------------------
             Gauge(value: compValue+0.1, in: 0...1.2){
                         Text("Percentage Compressed:")
-                            .font(.system(size: 20))
+                            .font(.appBody())
                         
                         //String(format: "%02d:%02d.%02ds", hh, mm, ss)
                         Text("\(Decimal(compValue*100).formatted(.number.precision(.fractionLength(0))))%")
-                            .font(.system(size: 20))
-                            .padding(.bottom, 10)
-                            .bold()
+                            .font(.appBodyBold())
+                            .mediumPaddingBottom()
                     } currentValueLabel: {
                         VStack{
                             HStack{
                                 Text("Min: \(Int(minPoint))")
-                                    .font(.system(size: 20))
+                                    .font(.appBody())
                                 Spacer()
                                 Text("Max: \(Int(maxPoint))")
-                                    .font(.system(size: 20))
+                                    .font(.appBody())
                             }
                             .padding(.bottom, 10)
                         }
@@ -61,39 +61,35 @@ struct CalibrationView: View {
                     ZStack{
                         RoundedRectangle(cornerRadius: 14)
                             .fill(Color(.systemGray5))
-                            .frame(width: 350, height: 140) // minimum size
+                            .frame(width: 350, height: 160) // minimum size
                         VStack{
                             // setting max and min values ------------------
                             Text("Current Compression Value:")
-                                .font(.system(size: 20))
+                                .font(.appBody())
                             Text("\(Int(currentStatus))")
-                                .padding(.bottom, 5)
-                                .font(.system(size: 20))
-                                .bold()
+                                .font(.appBodyBold())
+                                .mediumPaddingBottom()
                             HStack{
                                 Text("Set as:")
-                                    .padding(.bottom, 5)
-                                    .font(.system(size: 20))
-                                Button("Min Value"){
+                                    .font(.appBody())
+                                Button("Minimum"){
                                     bsm.minChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
                                     .tint(.blue.opacity(0.9))
                                     .foregroundStyle(.white)
-                                    .font(.system(size: 20))
+                                    .font(.appBody())
                                     .padding(.horizontal, 5)
-                                    .bold()
                                     
                                 
-                                Button("Max Value"){
+                                Button("Maximum"){
                                     bsm.maxChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
                                     .tint(.blue.opacity(0.9))
                                     .foregroundStyle(.white)
-                                    .font(.system(size: 20))
+                                    .font(.appBody())
                                     .padding(.horizontal, 5)
-                                    .bold()
                             }
                         }
                     }

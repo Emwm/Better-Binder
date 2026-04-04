@@ -13,16 +13,6 @@
 import SwiftUI
 import Foundation
 
-// formats our seconds variables into hh, mm, ss
-private func _formatSeconds(_ seconds:Int) -> String {
-    if seconds <= 0 {
-        return "00:00:00"
-    }
-    let hh: Int = seconds / 3600
-    let mm: Int = (seconds % 3600) / 60
-    let ss: Int = seconds % 60
-    return String(format: "%02d:%02d:%02d", hh, mm, ss)
-}
 
 // helper function to change gauge color from green to blue
 private func _colorForProgress(_ p: Double) -> Color {
@@ -40,34 +30,32 @@ struct TodayView: View {
     
     @Environment(BindManager.self) private var bsm
     @Environment(\.bindTimer) private var timer
-    // public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
     
     var body: some View {
         VStack{
 
             // Top today text ---------------------------
             HStack{
-                Image("bwBird")
+                Image("logo_threeColor")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 50, height: 50)
                 Text("Today") // list view of each bind today
-                    .font(Font.largeTitle.bold())
+                    .font(.appHeader())
             }
-                .padding(.top, 10)
+            .largePaddingTop()
             
             Text(Date.now.formatted(date: .long, time: .omitted))
-                .font(.system(size: 25))
-                .padding(.bottom,20)
+                .font(.appSubHeader())
+                .largePaddingBottom()
             
             // Time today of binding ---------------------------------
             Text("Total Binding Time:")
-                .font(.system(size: 25))
-                .bold()
-                .padding(.bottom, 2)
+                .font(.appBodyBold())
+                .smallPaddingBottom()
             Text("\(timer.secondsPassedTodayString)") // total time today
-                .font(.system(size: 25))
-                .padding(.bottom, 5)
+                .font(.appBody())
+                .smallPaddingBottom()
             
             // Gauge of fraction passed ------------------------
             Gauge(value: timer.fractionPassedToday, in: 0...1) {
@@ -80,45 +68,50 @@ struct TodayView: View {
             // 8 hour limit lable by gauge
             HStack{
                 Text("0 hrs")
-                    .font(.system(size: 20))
+                    .font(.appSmallCaption())
                 Spacer()
                 Text("8 hrs")
-                    .font(.system(size: 20))
+                    .font(.appSmallCaption())
             }
             .padding(.horizontal)
-            .padding(.bottom, 20)
+            .largePaddingBottom()
             
             // Current binding state --------------------
             HStack{
                 Text("Current Compression State:")
-                    .font(.system(size: 20))
+                    .font(.appBody())
                 Text("\(String(describing: bsm.currentState))")
-                    .font(.system(size: 20))
+                    .font(.appBody())
             }
-                .padding(.bottom, 10)
+                .largePaddingBottom()
             
             // List View of today binding history ----------------------------
             Text("List of Bind Sessions:") // list view of each bind today
-                .font(.system(size: 25))
-                .padding(.bottom, 5)
+                .font(.appBody())
+                .smallPaddingBottom()
             
             List{
                 ForEach(timer.bindSessionHistory.filter { Calendar.current.isDateInToday($0.startDate) }) { todayList in
                     HStack{
                         VStack(alignment: .leading){
                             Text("\(todayList.startDate.formatted(date: .abbreviated, time: .omitted))")
+                                .font(.appBody())
                             Text("\(todayList.startDate.formatted(date: .omitted, time: .shortened))")
+                                .font(.appBody())
                                 
                         }
                         Spacer()
-                        Text("Duration: \(_formatSeconds(todayList.durationSeconds))")
+                        Text("Duration: \(todayList.durationSeconds.asTimestamp())")
+                            .font(.appBody())
                     }
                 }
             }
             .listStyle(.insetGrouped) // or .plain, .grouped, etc.
             .frame(height: 300)       // choose a height that fits your design
             
-            // Testing Block ----------------------------
+            Spacer()
+            
+//            // Testing Block ----------------------------
 //            ZStack{
 //                RoundedRectangle(cornerRadius: 14)
 //                    .fill(Color(.systemGray5))

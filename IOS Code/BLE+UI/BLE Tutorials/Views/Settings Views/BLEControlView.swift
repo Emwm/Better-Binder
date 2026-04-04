@@ -16,9 +16,9 @@ struct BLEControlView: View {
     var body: some View {
             VStack(spacing: 16) {
                 Text("Device Status")
-                    .font(Font.largeTitle.bold())
+                    .font(.appHeader())
                 // Status card
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading) {
                     HStack(spacing: 10) {
                         Circle()
                             .fill(connectionColor)
@@ -26,9 +26,9 @@ struct BLEControlView: View {
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text(connectionLabel)
-                                .font(.headline)
+                                .font(.appBodyBold())
                             Text(ble.isConnected ? "Device connected" : "Select a device below")
-                                .font(.subheadline)
+                                .font(.appSmallCaption())
                                 .foregroundStyle(.secondary)
                         }
                         
@@ -40,11 +40,9 @@ struct BLEControlView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Sensor Value")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .font(.appBodyBold())
                             Text(ble.statusText.isEmpty ? "—" : ble.statusText)
-                                .font(.title3)
-                                .fontWeight(.semibold)
+                                .font(.appBody())
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.85)
                         }
@@ -62,6 +60,7 @@ struct BLEControlView: View {
                     } label: {
                         Label(ble.isScanning ? "Stop" : "Scan", systemImage: ble.isScanning ? "stop.fill" : "dot.radiowaves.left.and.right")
                             .frame(maxWidth: .infinity)
+                            .font(.appBody())
                     }
                     .buttonStyle(.bordered)
                     
@@ -70,6 +69,7 @@ struct BLEControlView: View {
                     } label: {
                         Label("Disconnect", systemImage: "xmark.circle.fill")
                             .frame(maxWidth: .infinity)
+                            .font(.appBody())
                     }
                     .buttonStyle(.bordered)
                     .disabled(!ble.isConnected)
@@ -78,7 +78,7 @@ struct BLEControlView: View {
                 // Devices
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Devices")
-                        .font(.headline)
+                        .font(.appBodyBold())
                     
                     if ble.devices.isEmpty {
                         VStack(spacing: 8) {
@@ -86,8 +86,8 @@ struct BLEControlView: View {
                                 .font(.title2)
                                 .foregroundStyle(.secondary)
                             
-                            Text(ble.isScanning ? "Searching…" : "Tap Scan to find your ESP32")
-                                .font(.subheadline)
+                            Text(ble.isScanning ? "Searching…" : "Tap Scan to find your device")
+                                .font(.appSmallCaption())
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -102,9 +102,9 @@ struct BLEControlView: View {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(d.name)
-                                            .font(.body)
+                                            .font(.appBody())
                                         Text("RSSI \(d.rssi)")
-                                            .font(.caption)
+                                            .font(.appSmallCaption())
                                             .foregroundStyle(.secondary)
                                     }
                                     Spacer()
@@ -144,7 +144,7 @@ struct BLEControlView: View {
                 Spacer(minLength: 0)
             }
             .padding()
-            .navigationTitle("ESP32 Setup")
+            .navigationTitle("Device Status")
         }
     }
 #Preview {
