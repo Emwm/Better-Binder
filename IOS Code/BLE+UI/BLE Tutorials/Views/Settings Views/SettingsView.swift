@@ -13,13 +13,13 @@ struct SettingsView: View {
     var body: some View {
         VStack{
             HStack{
-                Image("logo_solidFill_blue")
+                Image("logo_solidFill_coral")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 50, height: 50)
                 Text("Settings") // list view of each bind today
                     .font(.appHeader())
-                    .bold()
+                    .foregroundStyle(Color.colorDarkCoral)
             }
             .padding(.top, 10)
             
@@ -63,7 +63,6 @@ struct SettingsView: View {
                     }*/
                 }
             }
-            
         }
     }
 }

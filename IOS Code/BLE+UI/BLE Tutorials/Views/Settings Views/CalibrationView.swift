@@ -8,6 +8,12 @@
 import SwiftUI
 struct CalibrationView: View {
     @Environment(BindManager.self) private var bsm
+    @Environment(BLEManager.self) private var ble
+    
+    private var connectionLabel: String {
+        if ble.isScanning { return "Scanning…" }
+        return ble.isConnected ? "Connected" : "Not connected"
+    }
     
     var body: some View {
         
@@ -17,12 +23,15 @@ struct CalibrationView: View {
         let maxPoint = Double(bsm.maxValue)
 
         VStack{
-            Text("Compression")
-                .font(.appHeader())
-                .largePaddingTop()
-            Text("Calibration")
-                .font(.appHeader())
+            Text("Compression Calibration")
+                .font(.appSubHeader())
                 .largePaddingBottom()
+            
+            Text("Device Connection:")
+                .font(.appBody())
+            Text(connectionLabel)
+                .font(.appBodyBold())
+                .mediumPaddingBottom()
         
             Text("Current Compression State:")
                 .font(.appBody())
@@ -125,4 +134,5 @@ struct MarkerIndicator: View {
 #Preview {
     CalibrationView()
         .environment(BindManager())
+        .environment(BLEManager.mock)
 }

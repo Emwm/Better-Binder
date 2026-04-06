@@ -10,8 +10,8 @@ import SwiftUI
 
 enum CompressionState: String {
     case loose = "Loose"
-    case safe = "Safe level of Compression"
-    case tooTight = "Over compressed"
+    case binding = "Safe level of Compression"
+    case overCompressed = "Over compressed"
 }
 
 @Observable
@@ -61,12 +61,12 @@ class BindManager {
         let oldState = self.currentState
         
         //setting state based on what we got, numbers should change
-        if self._perCompression < 0.01 {
+        if self._perCompression < 0.1 {
                     self.currentState = .loose
         } else if self._perCompression > 0.99 {
-                    self.currentState = .tooTight
+                    self.currentState = .overCompressed
                 } else {
-                    self.currentState = .safe
+                    self.currentState = .binding
                 }
         
         //binding logic
@@ -82,13 +82,13 @@ class BindManager {
                 //binder off state, stop timer?
                 timer.stop()
                 
-            case .safe:
+            case .binding:
                 //binding logic, start timer?
                 if(timer.state == .idle){
                     timer.start()
                 }
                 
-            case .tooTight:
+            case .overCompressed:
                 //over compressed logic, send notificaiton?
                 print("too tight")
                 

@@ -60,7 +60,7 @@
 		E33E76612F3BC0E6008D27B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLE_TutorialsApp.swift; sourceTree = "<group>"; };
 		E33E76632F3BC0E6008D27B5 /* BLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEManager.swift; sourceTree = "<group>"; };
-		E3F9F86E2E9D591A00C7573A /* BLE Tutorials.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "BLE Tutorials.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3F9F86E2E9D591A00C7573A /* The Better Binder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Better Binder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3F9F87B2E9D591C00C7573A /* BLE TutorialsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BLE TutorialsTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3F9F8852E9D591C00C7573A /* BLE TutorialsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BLE TutorialsUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -187,7 +187,7 @@
 		E3F9F86F2E9D591A00C7573A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E3F9F86E2E9D591A00C7573A /* BLE Tutorials.app */,
+				E3F9F86E2E9D591A00C7573A /* The Better Binder.app */,
 				E3F9F87B2E9D591C00C7573A /* BLE TutorialsTests.xctest */,
 				E3F9F8852E9D591C00C7573A /* BLE TutorialsUITests.xctest */,
 			);
@@ -218,7 +218,7 @@
 			packageProductDependencies = (
 			);
 			productName = "BLE Tutorials";
-			productReference = E3F9F86E2E9D591A00C7573A /* BLE Tutorials.app */;
+			productReference = E3F9F86E2E9D591A00C7573A /* The Better Binder.app */;
 			productType = "com.apple.product-type.application";
 		};
 		E3F9F87A2E9D591C00C7573A /* BLE TutorialsTests */ = {
@@ -538,7 +538,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "BLE-Tutorials";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "The Better Binder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -574,7 +574,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "BLE-Tutorials";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "The Better Binder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;

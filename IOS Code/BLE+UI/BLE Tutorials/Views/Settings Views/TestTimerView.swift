@@ -17,8 +17,7 @@ struct TestTimerView: View {
         // Timer Block ----------------------------
         VStack{
             Text("Manual Timer")
-                .font(.appHeader())
-                .largePaddingTop()
+                .font(.appSubHeader())
             Text("for the today page")
                 .font(.appBody())
                 .largePaddingBottom()

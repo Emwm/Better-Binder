@@ -15,8 +15,7 @@ struct NotificationControlView: View{
     var body: some View{
         VStack{
             Text("Enable Notifications")
-                .font(.appHeader())
-                .largePaddingTop()
+                .font(.appSubHeader())
                 .largePaddingBottom()
             
             // button to link users to settings

@@ -21,6 +21,7 @@ struct MainTabView: View {
             Tab("Today", systemImage:"chart.xyaxis.line", value: 0){
                 TodayView()
             }
+            
             Tab("Journal", systemImage: "book", value: 1){
                 JournalListView()
             }
@@ -32,6 +33,8 @@ struct MainTabView: View {
             }
             
         }
+        .font(.appSmallCaption())
+        .tint(Color.colorDarkCoral)
         //global binding updates, important
         .onChange(of: ble.statusInt) { oldValue, newValue in
             bsm.setRawInt(for: newValue, timer: timer)

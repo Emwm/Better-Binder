@@ -22,6 +22,7 @@ struct JournalListView: View {
                         .frame(width: 50, height: 50)
                     Text("Journal")
                         .font(.appHeader())
+                        .foregroundColor(.colorDarkCoral)
                     Image("logo_solidOutline_coral")
                         .resizable()
                         .scaledToFit()

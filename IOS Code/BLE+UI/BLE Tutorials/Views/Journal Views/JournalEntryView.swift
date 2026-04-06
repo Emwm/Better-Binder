@@ -30,7 +30,7 @@ struct NewEntryView: View {
                     .font(.appSubHeader())
                     .smallPaddingBottom()
                 HStack{
-                    Image("logo_solidFill_coral")
+                    Image("logo_solidOutline_coral")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 40, height: 40)
@@ -40,7 +40,7 @@ struct NewEntryView: View {
                     Text("\(timestamp.formatted(date: .abbreviated, time: .shortened))")
                         .font(.appBody())
                     Spacer()
-                    Image("logo_solidFill_coral")
+                    Image("logo_solidOutline_coral")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 40, height: 40)

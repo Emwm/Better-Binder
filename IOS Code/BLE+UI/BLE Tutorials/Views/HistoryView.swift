@@ -92,12 +92,13 @@ struct HistoryView: View {
         VStack{
             // Top Header ----------------------
             HStack{
-                Image("logo_solidOutline_blue")
+                Image("logo_solidOutline_coral")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 50, height: 50)
                 Text("History") // list view of each bind today
                     .font(.appHeader())
+                    .foregroundStyle(Color.colorDarkCoral)
             }
             .padding(.top, 10)
             
@@ -140,7 +141,7 @@ struct HistoryView: View {
                     x: .value("Day", item.day, unit: .day),
                     y: .value("Total Seconds", item.totalSeconds)
                 )
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.colorCoral)
                 .cornerRadius(4)
                 .annotation(position: .top, alignment: .center) {
                     
@@ -148,7 +149,7 @@ struct HistoryView: View {
 
                 RuleMark(y: .value("8 Hours", 8 * 60 * 60))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [6, 6]))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.colorDarkCoral)
             }
             .chartPlotStyle { plot in
                 plot
