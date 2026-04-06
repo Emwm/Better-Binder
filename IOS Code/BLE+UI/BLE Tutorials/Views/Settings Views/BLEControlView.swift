@@ -9,8 +9,8 @@ struct BLEControlView: View {
     }
     
     private var connectionColor: Color {
-        if ble.isScanning { return .orange }
-        return ble.isConnected ? .green : .secondary
+        if ble.isScanning { return .colorCoral }
+        return ble.isConnected ? .colorGreen : .secondary
     }
     
     var body: some View {

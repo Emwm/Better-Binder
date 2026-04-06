@@ -60,7 +60,7 @@ struct CalibrationView: View {
                             .padding(.bottom, 10)
                         }
                     }
-                    .tint(fillColor(for: currentStatus))
+                    .tint(fillColor(for: compValue))
                     .gaugeStyle(.linearCapacity) // Or .accessoryCircular
                     .animation(.spring(), value: currentStatus)
                     .padding(.bottom, 10)
@@ -85,7 +85,7 @@ struct CalibrationView: View {
                                     bsm.minChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
-                                    .tint(.blue.opacity(0.9))
+                                    .tint(.colorMediumBlue.opacity(0.9))
                                     .foregroundStyle(.white)
                                     .font(.appBody())
                                     .padding(.horizontal, 5)
@@ -95,7 +95,7 @@ struct CalibrationView: View {
                                     bsm.maxChange(for: currentStatus)
                                 }
                                     .buttonStyle(.borderedProminent)
-                                    .tint(.blue.opacity(0.9))
+                                    .tint(.colorDarkBlue.opacity(0.9))
                                     .foregroundStyle(.white)
                                     .font(.appBody())
                                     .padding(.horizontal, 5)
@@ -108,10 +108,15 @@ struct CalibrationView: View {
     
     
     private func fillColor(for value: Double) -> Color {
-        if value < 0.9 { return .orange }
-        if value > 0.1 { return .red }
-            return .green // Within the "Set" compression range
+        if value <= 0.1 {
+            return .gray
+        } else if value >= 0.9 {
+            return .colorDarkBlue
+        } else {
+            // This triggers when the value is between 0.1 and 0.9
+            return .colorGreen
         }
+    }
 }
 struct MarkerIndicator: View {
     var label: String

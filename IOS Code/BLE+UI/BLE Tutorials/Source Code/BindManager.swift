@@ -55,15 +55,14 @@ class BindManager {
         // Calculate percentage: (Current - Min) / Span
         let percentage = (rawSensorVal - minValue) / span
         // Clamp it between 0 and 1
-        perCompression = max(0, min(percentage, 1.0))
-        
+        perCompression = percentage
         // Temporarily store the old state to check for transitions
         let oldState = self.currentState
         
         //setting state based on what we got, numbers should change
         if self._perCompression < 0.1 {
                     self.currentState = .loose
-        } else if self._perCompression > 0.99 {
+        } else if self._perCompression > 1.0 {
                     self.currentState = .overCompressed
                 } else {
                     self.currentState = .binding
