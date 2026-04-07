@@ -72,11 +72,11 @@ class BindTimer{
     private var _numberOfNotificationsSent: Int = 0
     
     // limit variables (today)
-    private var _secondsBindLimit: TimeInterval = 30 // where 8 hour limit will go
+    private var _secondsBindLimit: TimeInterval = 60*60*6 // where 8 hour limit will go
     
     // limit variables (this bind)
     private var _notificationLimit: Int = 3
-    private var _secondsBetweenNotifications: TimeInterval = 10 // this value now for testing
+    private var _secondsBetweenNotifications: TimeInterval = 60*30 // this value now for testing
     
     // Initialize public properties (can access outside of this class) ---------------------------
     // this setup of public properties = private properties, allows private properties to be viewed but not changed outside of this class
@@ -107,6 +107,9 @@ class BindTimer{
     var secondsPassedThisBind: Int { // making public for testing
         return _secondsPassedThisBind
     }
+    var secondsBindLimit: Double {
+        return _secondsBindLimit
+    }
     
     init() {
         loadHistoryFromBundleJSON()
@@ -136,8 +139,8 @@ class BindTimer{
     
     func setDailyBindLimit(seconds: TimeInterval) {
         _secondsBindLimit = seconds
+        
         // Recompute derived values that depend on the limit
-        _secondsPassedToday = _totalSeconds(on: Date())
         _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
     }
     

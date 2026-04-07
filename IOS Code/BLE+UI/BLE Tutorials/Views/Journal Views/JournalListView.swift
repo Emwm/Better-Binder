@@ -13,6 +13,7 @@ struct JournalListView: View {
     @State private var isShowingEditor = false
 
     var body: some View {
+
         NavigationStack {
             VStack{
                 HStack{
@@ -46,7 +47,7 @@ struct JournalListView: View {
                 }
                 HStack {
                     Text("Physical Discomfort: \(Int(entry.physicalWellness))/10").font(.appSmallCaption())
-                    Text("TEMP Mentality: \(Int(entry.mentalWellness))/10").font(.appSmallCaption())
+                    Text("Wellbeing: \(Int(entry.mentalWellness))/10").font(.appSmallCaption())
                 }
             }
             .toolbar {

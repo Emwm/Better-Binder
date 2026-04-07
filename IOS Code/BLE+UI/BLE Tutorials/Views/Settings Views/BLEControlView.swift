@@ -14,6 +14,7 @@ struct BLEControlView: View {
     }
     
     var body: some View {
+        ScrollView{
             VStack(spacing: 16) {
                 Text("Device Status")
                     .font(.appSubHeader())
@@ -120,32 +121,33 @@ struct BLEControlView: View {
                     }
                 }
                 /*
-                // LED controls
-                HStack(spacing: 10) {
-                    Button {
-                        ble.send("LED:1")
-                    } label: {
-                        Label("LED ON", systemImage: "lightbulb.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!ble.isConnected)
-                    
-                    Button {
-                        ble.send("LED:0")
-                    } label: {
-                        Label("LED OFF", systemImage: "lightbulb.slash.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(!ble.isConnected)
-                }
-                */
+                 // LED controls
+                 HStack(spacing: 10) {
+                 Button {
+                 ble.send("LED:1")
+                 } label: {
+                 Label("LED ON", systemImage: "lightbulb.fill")
+                 .frame(maxWidth: .infinity)
+                 }
+                 .buttonStyle(.borderedProminent)
+                 .disabled(!ble.isConnected)
+                 
+                 Button {
+                 ble.send("LED:0")
+                 } label: {
+                 Label("LED OFF", systemImage: "lightbulb.slash.fill")
+                 .frame(maxWidth: .infinity)
+                 }
+                 .buttonStyle(.bordered)
+                 .disabled(!ble.isConnected)
+                 }
+                 */
                 Spacer(minLength: 0)
             }
             .padding()
         }
     }
+}
 #Preview {
     BLEControlView()
         .environment(BLEManager.mock)

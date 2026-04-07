@@ -69,110 +69,112 @@ struct CalibrationView: View {
             .init(percentage: Double(bsm.maxPercent - (paddingFrac)/paddingValue), label: "Compressed: \(Int(bsm.maxValue))", color: .colorDarkBlue)
         ]
 
-        VStack{
-            Text("Compression Calibration")
-                .font(.appSubHeader())
-                .largePaddingBottom()
-            
-            Text("Device Connection:")
-                .font(.appBody())
-            Text(connectionLabel)
-                .font(.appBodyBold())
-                .mediumPaddingBottom()
-        
-            Text("Current Compression State:")
-                .font(.appBody())
-            Text("\(String(describing: bsm.currentState))")
-                .font(.appBodyBold())
-                .mediumPaddingBottom()
-            
-            ZStack{
-                Text("Binding Range")
-                    .font(.appSmallCaption())
-                    .foregroundStyle(Color.colorGreen)
-                    .padding(.top, 8)
+        ScrollView{
+            VStack{
+                Text("Compression Calibration")
+                    .font(.appSubHeader())
+                    .largePaddingBottom()
                 
-                // gauge visual --------------------------
-                Gauge(value: compValue+paddingFrac, in: 0...paddingValue+0.1){
-                            Text("Percentage Compressed:")
-                                .font(.appBody())
-                            
-                            //String(format: "%02d:%02d.%02ds", hh, mm, ss)
-                            Text("\(Decimal(compValue*100).formatted(.number.precision(.fractionLength(0))))%")
-                                .font(.appBodyBold())
-                                .largePaddingBottom()
-                        } currentValueLabel: {
-    //                        VStack{
-    //                            HStack{
-    //                                Text("Loose: \(Int(minPoint))")
-    //                                    .font(.appBody())
-    //                                Spacer()
-    //                                Text("Compressed: \(Int(maxPoint))")
-    //                                    .font(.appBody())
-    //                            }
-    //                            .padding(.bottom, 10)
-    //                        }
-                        }
-                        .tint(fillColor(for: compValue))
-                        .gaugeStyle(.linearCapacity) // Or .accessoryCircular
-                        .animation(.spring(), value: currentStatus)
-                        .padding(.horizontal)
-                        .overlay {
-                            // Align markers to the gauge’s content width
-                            LinearGaugeMarkersOverlay(markers: markers, maxClamp: paddingValue)
-                                .padding(.horizontal) // match Gauge’s horizontal padding for alignment
-                                .frame(height: 16, alignment: .bottom) // height for markers + labels
-                                .offset(y: 62) // adjust vertical position so lines sit on top of the track
-                        }
-                        .largePaddingBottom()
-            }
+                Text("Device Connection:")
+                    .font(.appBody())
+                Text(connectionLabel)
+                    .font(.appBodyBold())
+                    .mediumPaddingBottom()
                 
-                    // setting values visual -----------------------
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color(.systemGray5))
-                            .frame(width: 350, height: 300) // minimum size
-                        VStack{
-                            // setting max and min values ------------------
-                            Text("Current Compression Value:")
-                                .font(.appBody())
-                            Text("\(Int(currentStatus))")
-                                .font(.appBodyBold())
-                                .mediumPaddingBottom()
-                            
-                            Text("Set Binding Range:")
-                                .font(.appBody())
-                            
-                            HStack{
-                                Button("Minimum"){
-                                    bsm.minChange(for: currentStatus)
-                                }
-                                    .buttonStyle(.borderedProminent)
-                                    .tint(.colorMediumBlue.opacity(0.9))
-                                    .foregroundStyle(.white)
-                                    .font(.appBody())
-                                    .padding(.horizontal, 5)
-                                    
-                                
-                                Button("Maximum"){
-                                    bsm.maxChange(for: currentStatus)
-                                }
-                                    .buttonStyle(.borderedProminent)
-                                    .tint(.colorDarkBlue.opacity(0.9))
-                                    .foregroundStyle(.white)
-                                    .font(.appBody())
-                                    .padding(.horizontal, 5)
-                            }
+                Text("Current Compression State:")
+                    .font(.appBody())
+                Text("\(String(describing: bsm.currentState))")
+                    .font(.appBodyBold())
+                    .mediumPaddingBottom()
+                
+                ZStack{
+                    Text("Binding Range")
+                        .font(.appSmallCaption())
+                        .foregroundStyle(Color.colorGreen)
+                        .padding(.top, 8)
+                    
+                    // gauge visual --------------------------
+                    Gauge(value: compValue+paddingFrac, in: 0...paddingValue+0.1){
+                        Text("Percentage Compressed:")
+                            .font(.appBody())
+                        
+                        //String(format: "%02d:%02d.%02ds", hh, mm, ss)
+                        Text("\(Decimal(compValue*100).formatted(.number.precision(.fractionLength(0))))%")
+                            .font(.appBodyBold())
+                            .largePaddingBottom()
+                    } currentValueLabel: {
+                        //                        VStack{
+                        //                            HStack{
+                        //                                Text("Loose: \(Int(minPoint))")
+                        //                                    .font(.appBody())
+                        //                                Spacer()
+                        //                                Text("Compressed: \(Int(maxPoint))")
+                        //                                    .font(.appBody())
+                        //                            }
+                        //                            .padding(.bottom, 10)
+                        //                        }
+                    }
+                    .tint(fillColor(for: compValue))
+                    .gaugeStyle(.linearCapacity) // Or .accessoryCircular
+                    .animation(.spring(), value: currentStatus)
+                    .padding(.horizontal)
+                    .overlay {
+                        // Align markers to the gauge’s content width
+                        LinearGaugeMarkersOverlay(markers: markers, maxClamp: paddingValue)
+                            .padding(.horizontal) // match Gauge’s horizontal padding for alignment
+                            .frame(height: 16, alignment: .bottom) // height for markers + labels
+                            .offset(y: 62) // adjust vertical position so lines sit on top of the track
+                    }
+                    .largePaddingBottom()
+                }
+                
+                // setting values visual -----------------------
+                ZStack{
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color(.systemGray5))
+                        .frame(width: 350, height: 300) // minimum size
+                    VStack{
+                        // setting max and min values ------------------
+                        Text("Current Compression Value:")
+                            .font(.appBody())
+                        Text("\(Int(currentStatus))")
+                            .font(.appBodyBold())
                             .mediumPaddingBottom()
+                        
+                        Text("Set Binding Range:")
+                            .font(.appBody())
+                        
+                        HStack{
+                            Button("Minimum"){
+                                bsm.minChange(for: currentStatus)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.colorMediumBlue.opacity(0.9))
+                            .foregroundStyle(.white)
+                            .font(.appBody())
+                            .padding(.horizontal, 5)
                             
-                            Text("Use the above buttons to set your binding range. The minimum value is the point where the binding timer will start and the maxiumim value is where the overcompression will begin")
-                                .font(.appSmallCaption())
-                                .padding(.horizontal, 50)
-                                .opacity(0.7)
+                            
+                            Button("Maximum"){
+                                bsm.maxChange(for: currentStatus)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.colorDarkBlue.opacity(0.9))
+                            .foregroundStyle(.white)
+                            .font(.appBody())
+                            .padding(.horizontal, 5)
                         }
+                        .mediumPaddingBottom()
+                        
+                        Text("Use the above buttons to set your binding range. The minimum value is the point where the binding timer will start and the maxiumim value is where the overcompression will begin")
+                            .font(.appSmallCaption())
+                            .padding(.horizontal, 50)
+                            .opacity(0.7)
                     }
                 }
-                Spacer()
+            }
+            Spacer()
+        }
     }
     
     

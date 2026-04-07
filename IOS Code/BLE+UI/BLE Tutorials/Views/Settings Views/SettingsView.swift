@@ -39,6 +39,14 @@ struct SettingsView: View {
                         }
                         .font(.appBody())
                     }
+                    Section(header: Text("Binding Tracking")) {
+                        NavigationLink{
+                            BindLimitView()
+                        } label: {
+                            Label("Change Binding Limit", systemImage: "clock.arrow.circlepath")
+                        }
+                        .font(.appBody())
+                    }
                     Section(header: Text("Notifications")) {
                         NavigationLink{
                             NotificationControlView()

@@ -63,7 +63,7 @@ struct TodayView: View {
     @Environment(\.bindTimer) private var timer
     
     var body: some View {
-        ZStack{
+        ScrollView{
             //this is to change the background color
 //            Color.colorWhite
 //                .ignoresSafeArea()
@@ -108,7 +108,7 @@ struct TodayView: View {
                     Text("0 hrs")
                         .font(.appSmallCaption())
                     Spacer()
-                    Text("8 hrs")
+                    Text("\(Double( timer.secondsBindLimit/(60*60) ).formatted(.number.precision(.fractionLength(1)))) hrs")
                         .font(.appSmallCaption())
                 }
                 .padding(.horizontal)
@@ -206,4 +206,3 @@ struct TodayView: View {
     TodayView()
         .environment(BindManager())
 }
-
