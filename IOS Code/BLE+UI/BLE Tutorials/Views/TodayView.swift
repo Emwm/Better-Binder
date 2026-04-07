@@ -64,9 +64,10 @@ struct TodayView: View {
     
     var body: some View {
         ZStack{
-            Color.colorWhite 
-                .ignoresSafeArea()
-                .saturation(0.7)
+            //this is to change the background color
+//            Color.colorWhite
+//                .ignoresSafeArea()
+//                .saturation(0.7)
             
             VStack{
                 
@@ -114,13 +115,25 @@ struct TodayView: View {
                 .largePaddingBottom()
                 
                 // Current binding state --------------------
-                HStack{
-                    Text("Current Compression State:")
+                
+                Text("Current Compression State:")
+                    .font(.appBody())
+                Text("\(String(describing: bsm.currentState))")
+                    .font(.appBody())
+                    .mediumPaddingBottom()
+                
+                Text("Current Bind Session:")
+                    .font(.appBody())
+                if timer.state == .running {
+                    Text("\(timer.secondsPassedThisBind.asTimestamp())")
                         .font(.appBody())
-                    Text("\(String(describing: bsm.currentState))")
+                        .mediumPaddingBottom()
+                } else{
+                    Text("00:00:00")
                         .font(.appBody())
+                        .mediumPaddingBottom()
                 }
-                    .largePaddingBottom()
+                    
                 
                 let todaysSessions = timer.bindSessionHistory.filter { Calendar.current.isDateInToday($0.startDate) }
                 
@@ -151,8 +164,6 @@ struct TodayView: View {
                         }
                         .listStyle(.insetGrouped) // or .plain, .grouped, etc.
                         .frame(height: 300)  // choose a height that fits your design
-                        .background(Color.colorLightBlue)
-                        .listRowBackground(Color.colorCoral)
                     }
                 
                 Spacer()

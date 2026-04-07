@@ -25,6 +25,11 @@ class BindManager {
             }
         }
     }
+    //binding fractions for determining ranges
+    private(set) var maxPercent: Double = 1
+    private(set) var minPercent: Double = 0
+    //this is a invisible value that adjusts the range of overcompression, we do not really want people tightinging a binder until it hurts
+    private(set) var overCompressionGap: Double = 0.1
     
     private(set) var perCompression: Double = 0.0
     private(set) var rawInt: Double = 0.0
@@ -60,9 +65,9 @@ class BindManager {
         let oldState = self.currentState
         
         //setting state based on what we got, numbers should change
-        if self._perCompression < 0.1 {
+        if self._perCompression < minPercent {
                     self.currentState = .loose
-        } else if self._perCompression > 1.0 {
+        } else if self._perCompression > maxPercent+overCompressionGap {
                     self.currentState = .overCompressed
                 } else {
                     self.currentState = .binding
