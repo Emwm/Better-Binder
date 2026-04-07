@@ -44,6 +44,10 @@ struct JournalListView: View {
                         .lineLimit(3) // Show a preview
                         .font(.appBody())
                 }
+                HStack {
+                    Text("Physical Discomfort: \(Int(entry.physicalWellness))/10").font(.appSmallCaption())
+                    Text("TEMP Mentality: \(Int(entry.mentalWellness))/10").font(.appSmallCaption())
+                }
             }
             .toolbar {
                 Button(action: { isShowingEditor = true }) {
