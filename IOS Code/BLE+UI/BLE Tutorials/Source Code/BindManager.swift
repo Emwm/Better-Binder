@@ -17,14 +17,23 @@ enum CompressionState: String {
 @Observable
 class BindManager {
     
-    //read only variables, inital values
-    private(set) var currentState: CompressionState = .loose {
+    //read only variables, inital values, userdefaults keeps the state through app closure
+    private(set) var currentState: CompressionState = {
+        if let savedStateString = UserDefaults.standard.string(forKey: "savedCompressionState"),
+           let savedState = CompressionState(rawValue: savedStateString) {
+            return savedState
+        }
+        return .loose
+    }() {
         didSet {
-            if oldValue != currentState{
-                //stateChange(
+            if oldValue != currentState {
+                //save the new state to user defaults so when the app dissapears werechill
+                UserDefaults.standard.set(currentState.rawValue, forKey: "savedCompressionState")
             }
         }
     }
+    
+    
     //binding fractions for determining ranges
     private(set) var maxPercent: Double = 1
     private(set) var minPercent: Double = 0

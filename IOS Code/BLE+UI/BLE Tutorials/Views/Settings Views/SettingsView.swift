@@ -46,6 +46,12 @@ struct SettingsView: View {
                             Label("Change Binding Limit", systemImage: "clock.arrow.circlepath")
                         }
                         .font(.appBody())
+                        NavigationLink{
+                            DeleteTodayView()
+                        } label: {
+                            Label("Delete Today Data", systemImage: "trash.circle.fill")
+                        }
+                        .font(.appBody())
                     }
                     Section(header: Text("Notifications")) {
                         NavigationLink{

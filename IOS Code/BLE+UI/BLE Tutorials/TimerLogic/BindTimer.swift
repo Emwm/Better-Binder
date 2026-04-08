@@ -44,7 +44,7 @@ private struct BindSessionDTO: Codable {
 /*
  calculates properties -> how much time passed and left in time limit (seconds value and formated strings hh:mm:ss), fraction of time passed vs time limit
  public methods -> start(), stop(), setDailyBindLimit()
- public varaibles -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
+ public varaibles -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindTimerState, secondsPassedThisBind
  private methods -> _createTimer(), _killTimer(), _onTick(), _totalSeconds(on day: Date)
  */
 @Observable // declares everything publically accessible in class acts as state var
@@ -59,6 +59,14 @@ class BindTimer{
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         _seedDataIfNeeded(context: modelContext)
+        
+        // ADDED: Check if there was an active session running before the app was killed
+        if let savedDate = UserDefaults.standard.object(forKey: "activeBindStartDate") as? Date {
+            _dateStartedThisBind = savedDate
+            _state = .running
+            _createTimer()
+        }
+        
     }
     
     // old list based stuff
@@ -73,6 +81,7 @@ class BindTimer{
     private var _secondsPassedToday: Int = 0
     private var _fractionPassedToday: Double = 0
     private var _secondsPassedPreviouslyToday: Int = 0
+    
     // tracking variables (this bind)
     private var _secondsPassedThisBind: Int = 0
     private var _dateStartedThisBind: Date = Date.now
@@ -119,8 +128,15 @@ class BindTimer{
    
     // resets timer values and starts timer
     func start(){
-        _dateStartedThisBind = Date.now
-        _secondsPassedThisBind = 0
+        // ADDED: Only set Date.now if we don't already have a saved start date
+        if let savedDate = UserDefaults.standard.object(forKey: "activeBindStartDate") as? Date {
+            _dateStartedThisBind = savedDate
+        } else {
+            _dateStartedThisBind = Date.now
+            UserDefaults.standard.set(_dateStartedThisBind, forKey: "activeBindStartDate")
+        }
+        
+        _secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
         _state = .running
         _createTimer()
     }
@@ -129,14 +145,18 @@ class BindTimer{
     func stop(){
         _secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
         
-        // old
-//        _bindSessionHistory.append(BindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind))
-        addBindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind)
+        // only add to data set if it is greater than 2 seconds
+        if _secondsPassedThisBind > 2 {
+            addBindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind)
+        }
 
         // stop timer
         _secondsPassedThisBind = 0
         _state = .idle
         _killTimer()
+        
+        // ADDED: Clear the active session from UserDefaults so the next start() gets a fresh Date.now
+        UserDefaults.standard.removeObject(forKey: "activeBindStartDate")
     }
     
     func setDailyBindLimit(seconds: TimeInterval) {
@@ -153,7 +173,9 @@ class BindTimer{
     
     func deleteBindSession(_ item: BindSession){
         modelContext.delete(item)
-        self._secondsPassedToday = _totalSeconds(on: Date())
+        
+        self._secondsPassedPreviouslyToday = _totalSeconds(on: Date())
+        self._secondsPassedToday = self._secondsPassedThisBind + self._secondsPassedPreviouslyToday
     }
     
     // Private Methods (accessible only inside of this class) --------------------------------------------

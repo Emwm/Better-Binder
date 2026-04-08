@@ -88,6 +88,7 @@ struct TodayView: View {
     }
     
     var body: some View {
+        ScrollView{
             VStack{
                 
                 // Top today text ---------------------------
@@ -157,8 +158,8 @@ struct TodayView: View {
                     .smallPaddingBottom()
                 
                 if todaySessions.isEmpty {
-                        Text("No history yet.")
-                            .font(.appBody())
+                    Text("No history yet.")
+                        .font(.appBody())
                 } else {
                     List{
                         ForEach(todaySessions) { todayList in
@@ -175,8 +176,8 @@ struct TodayView: View {
                             }
                         }
                         .onDelete { indexSet in
-                                deleteSession(at: indexSet, from: todaySessions)
-                            }
+                            deleteSession(at: indexSet, from: todaySessions)
+                        }
                         
                     }
                     .listStyle(.insetGrouped) // or .plain, .grouped, etc.
@@ -186,6 +187,7 @@ struct TodayView: View {
                 Spacer()
             }
         }
+    }
 }
 
 #Preview {
