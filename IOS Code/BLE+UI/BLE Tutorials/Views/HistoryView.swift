@@ -21,7 +21,6 @@ struct HistoryView: View {
     @Environment(BindTimer.self) private var timer
     @Query(sort: \BindSession.startDate, order: .reverse) var bindSessionHistory: [BindSession] // load data into an array
     
-    
     @State private var expandedDays: Set<Date> = [] // Keep expansion state per day
     @State private var scrollXPosition: Date?
     
@@ -92,7 +91,6 @@ struct HistoryView: View {
     // start of View --------------------------------------------
     
     var body: some View {
-        ScrollView{
             VStack{
                 // Top Header ----------------------
                 HStack{
@@ -244,7 +242,6 @@ struct HistoryView: View {
                 .listSectionSpacing(.compact)
             }
         }
-    }
 }
 #Preview {
     // 1. Create an in-memory container (clears every time the preview restarts)

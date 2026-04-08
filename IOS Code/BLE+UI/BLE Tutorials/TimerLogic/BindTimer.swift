@@ -35,12 +35,11 @@ enum BindTimerState: String {
 //    var durationSeconds: Int
 //}
 
-//// this is to load generated data from json
-//private struct BindSessionDTO: Codable {
-//    let id: UUID // or String if you prefer: let id: String
-//    let startDate: Date
-//    let durationSeconds: Int
-//}
+// this is to load generated data from json
+private struct BindSessionDTO: Codable {
+    let startDate: Date
+    let durationSeconds: Int
+}
 
 /*
  calculates properties -> how much time passed and left in time limit (seconds value and formated strings hh:mm:ss), fraction of time passed vs time limit
@@ -58,8 +57,9 @@ class BindTimer{
     var modelContext: ModelContext
     
     init(modelContext: ModelContext) {
-            self.modelContext = modelContext
-        }
+        self.modelContext = modelContext
+        _seedDataIfNeeded(context: modelContext)
+    }
     
     // old list based stuff
     //    // tracking variables (all history)
@@ -114,11 +114,6 @@ class BindTimer{
     var secondsBindLimit: Double {
         return _secondsBindLimit
     }
-    
-    // old might not need
-//    init() {
-//        loadHistoryFromBundleJSON()
-//    }
     
     // Public Methods (accessible outside of this class) --------------------------------------------
    
@@ -230,32 +225,43 @@ class BindTimer{
     }
     
     // old
-//    private func loadHistoryFromBundleJSON(fileName: String = "generatedBindData") {
-//        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
-//            print("generatedBindData.json not found in bundle")
-//            return
-//        }
-//        do {
-//            let data = try Data(contentsOf: url)
-//            let decoder = JSONDecoder()
-//            decoder.dateDecodingStrategy = .iso8601
-//            let decoded = try decoder.decode([BindSessionDTO].self, from: data)
-//
-//            // Map DTO -> BindSession (we ignore the JSON id and generate our own UUID like your struct does)
-//            let mapped = decoded.map { dto in
-//                BindSession(startDate: dto.startDate, durationSeconds: dto.durationSeconds)
-//            }
-//
-//            // Replace or append, depending on your needs:
-//            self._bindSessionHistory = mapped
-//
-//            // Optionally recompute today's running totals immediately
-//            self._secondsPassedToday = self._totalSeconds(on: Date())
-//            self._fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
-//        } catch {
-//            print("Failed to decode generatedBindData.json: \(error)")
-//        }
-//    }
+    private func _seedDataIfNeeded(context: ModelContext) {
+        // 1. Check if we already have data
+        let descriptor = FetchDescriptor<BindSession>()
+        let existingCount = (try? context.fetchCount(descriptor)) ?? 0
+        
+        // 2. Only proceed if the database is empty
+        guard existingCount == 0 else {
+            print("Database already has data. Skipping seed.")
+            return
+        }
+        
+        // 3. Your existing JSON logic
+        guard let url = Bundle.main.url(forResource: "generatedBindData", withExtension: "json"),
+              let data = try? Data(contentsOf: url) else { return }
+        
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let decodedDTOs = try decoder.decode([BindSessionDTO].self, from: data)
+            
+            // 4. Map and Insert into the context
+            for dto in decodedDTOs {
+                let newSession = BindSession(
+                    startDate: dto.startDate,
+                    durationSeconds: dto.durationSeconds
+                )
+                context.insert(newSession)
+            }
+            
+            // 5. Save the changes to the phone's disk
+            try context.save()
+            print("Successfully seeded \(decodedDTOs.count) sessions.")
+            
+        } catch {
+            print("Seeding failed: \(error)")
+        }
+    }
 }
 
 //private struct BindTimerKey: EnvironmentKey {

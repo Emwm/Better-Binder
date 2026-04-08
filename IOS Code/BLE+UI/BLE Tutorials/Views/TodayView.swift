@@ -88,7 +88,6 @@ struct TodayView: View {
     }
     
     var body: some View {
-        ScrollView{
             VStack{
                 
                 // Top today text ---------------------------
@@ -136,9 +135,7 @@ struct TodayView: View {
                 
                 // Current binding state --------------------
                 
-                Text("Current Compression State:")
-                    .font(.appBody())
-                Text("\(String(describing: bsm.currentState))")
+                Text("Current State: \(String(describing: bsm.currentState))")
                     .font(.appBody())
                     .mediumPaddingBottom()
                 
@@ -189,7 +186,6 @@ struct TodayView: View {
                 Spacer()
             }
         }
-    }
 }
 
 #Preview {

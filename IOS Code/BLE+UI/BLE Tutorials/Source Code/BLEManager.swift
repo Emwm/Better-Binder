@@ -44,7 +44,10 @@ final class BLEManager: NSObject, @unchecked Sendable {
             
             // Only start the hardware stack if explicitly requested AND not in a preview
             if startCentral && !isPreview {
-                self.central = CBCentralManager(delegate: self, queue: nil)
+                self.central = CBCentralManager(
+                    delegate: self,
+                    queue: nil,
+                    options: [CBCentralManagerOptionRestoreIdentifierKey: "com.betterbinder.BLECentral"])
             }
         }
 
@@ -90,6 +93,23 @@ final class BLEManager: NSObject, @unchecked Sendable {
 
 // MARK: - CBCentralManagerDelegate
 extension BLEManager: CBCentralManagerDelegate {
+    func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
+        // 1. Grab the peripherals that iOS kept track of while the app was asleep
+        if let restoredPeripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] {
+
+            for restoredPeripheral in restoredPeripherals {
+                // 2. Re-assign your local peripheral and set the delegate so you can receive data again
+                self.peripheral = restoredPeripheral
+                restoredPeripheral.delegate = self
+
+                // 3. Re-connect if it isn't already connected
+                if restoredPeripheral.state != .connected {
+                    central.connect(restoredPeripheral, options: nil)
+                }
+            }
+        }
+    }
+    
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         isBluetoothOn = (central.state == .poweredOn)
     }
