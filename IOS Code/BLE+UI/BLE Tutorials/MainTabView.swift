@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct MainTabView: View {
         
@@ -14,7 +15,7 @@ struct MainTabView: View {
     //ble update observables
     @Environment(BLEManager.self) private var ble
     @Environment(BindManager.self) private var bsm
-    @Environment(\.bindTimer) private var timer
+    @Environment(BindTimer.self) private var timer
 
     var body: some View {
         TabView(selection: $selectedTab){
@@ -43,8 +44,12 @@ struct MainTabView: View {
 }
 
 #Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: BindSession.self, configurations: config)
+    
     MainTabView()
         .environment(BLEManager.mock)
-        .environment(BindTimer())
+        .environment(BindTimer(modelContext: container.mainContext))
+        .modelContainer(container)
         .environment(BindManager())
 }

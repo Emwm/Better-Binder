@@ -20,6 +20,7 @@
 import Foundation
 import Observation
 import SwiftUI
+import SwiftData
 
 // the states of the timer
 enum BindTimerState: String {
@@ -28,24 +29,24 @@ enum BindTimerState: String {
 }
 
 // format for saving each "this bind" session
-struct BindSession: Identifiable, Equatable {
-    let id = UUID()
-    let startDate: Date
-    var durationSeconds: Int
-}
+//struct BindSession: Identifiable, Equatable {
+//    let id = UUID()
+//    let startDate: Date
+//    var durationSeconds: Int
+//}
 
-// this is to load generated data from json
-private struct BindSessionDTO: Codable {
-    let id: UUID // or String if you prefer: let id: String
-    let startDate: Date
-    let durationSeconds: Int
-}
+//// this is to load generated data from json
+//private struct BindSessionDTO: Codable {
+//    let id: UUID // or String if you prefer: let id: String
+//    let startDate: Date
+//    let durationSeconds: Int
+//}
 
 /*
  calculates properties -> how much time passed and left in time limit (seconds value and formated strings hh:mm:ss), fraction of time passed vs time limit
  public methods -> start(), stop(), setDailyBindLimit()
  public varaibles -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
- private methods -> _createTimer(), _killTimer(), _onTick(), _formatSeconds(_ seconds:Int), _totalSeconds(on day: Date)
+ private methods -> _createTimer(), _killTimer(), _onTick(), _totalSeconds(on day: Date)
  */
 @Observable // declares everything publically accessible in class acts as state var
 // With @​Observable, stored properties are observable by default. Changes to those properties will trigger view updates when the object is used in a SwiftUI view.
@@ -53,19 +54,25 @@ private struct BindSessionDTO: Codable {
 class BindTimer{
     // initialize states, variables, timer --------------------------------------------
     
+    // data model setup
+    var modelContext: ModelContext
+    
+    init(modelContext: ModelContext) {
+            self.modelContext = modelContext
+        }
+    
+    // old list based stuff
+    //    // tracking variables (all history)
+    //    private var _bindSessionHistory: [BindSession] = [] // public and observable array of all bind sessions
+    
     // timer
     private var _state: BindTimerState = .idle
     private var _timer: Timer?
     
-    // tracking variables (all history)
-    private var _bindSessionHistory: [BindSession] = [] // public and observable array of all bind sessions
-    
     // tracking variables (today)
     private var _secondsPassedToday: Int = 0
     private var _fractionPassedToday: Double = 0
-    private var _secondsPassedPreviouslyToday: Int { // computed value that recalculates every time accessed
-        _totalSeconds(on: Date()) // calls private function totalSeconds()
-    }
+    private var _secondsPassedPreviouslyToday: Int = 0
     // tracking variables (this bind)
     private var _secondsPassedThisBind: Int = 0
     private var _dateStartedThisBind: Date = Date.now
@@ -84,22 +91,19 @@ class BindTimer{
         return _secondsPassedToday
     }
     var secondsPassedTodayString: String {
-        return _formatSeconds(_secondsPassedToday)
+        return _secondsPassedToday.asTimestamp()
     }
     var secondsLeftToday: Int{
         Int(_secondsBindLimit) - _secondsPassedToday
     }
     var secondsLeftTodayString: String{
-        return _formatSeconds(secondsLeftToday)
+        return secondsLeftToday.asTimestamp()
     }
     var fractionPassedToday: Double {
         return _fractionPassedToday
     }
     var fractionLeftToday: Double{
         1 - _fractionPassedToday
-    }
-    var bindSessionHistory: [BindSession] {
-        return _bindSessionHistory
     }
     var state: BindTimerState{
         _state
@@ -111,9 +115,10 @@ class BindTimer{
         return _secondsBindLimit
     }
     
-    init() {
-        loadHistoryFromBundleJSON()
-    }
+    // old might not need
+//    init() {
+//        loadHistoryFromBundleJSON()
+//    }
     
     // Public Methods (accessible outside of this class) --------------------------------------------
    
@@ -127,9 +132,11 @@ class BindTimer{
     
     // saves time passed this bind to bindsessionhistory list and stops timer
     func stop(){
-        // append seconds passed this bind to the list of bind history
         _secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
-        _bindSessionHistory.append(BindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind))
+        
+        // old
+//        _bindSessionHistory.append(BindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind))
+        addBindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind)
 
         // stop timer
         _secondsPassedThisBind = 0
@@ -142,6 +149,16 @@ class BindTimer{
         
         // Recompute derived values that depend on the limit
         _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
+    }
+    
+    func addBindSession(startDate: Date, durationSeconds: Int){
+        let newTimeSession = BindSession(startDate: startDate, durationSeconds: durationSeconds)
+        modelContext.insert(newTimeSession) // saves to persistant storage
+    }
+    
+    func deleteBindSession(_ item: BindSession){
+        modelContext.delete(item)
+        self._secondsPassedToday = _totalSeconds(on: Date())
     }
     
     // Private Methods (accessible only inside of this class) --------------------------------------------
@@ -177,105 +194,109 @@ class BindTimer{
     private func _killTimer(){
         _timer?.invalidate()
         _timer = nil
-        // cancel pending limit notifications
-        BindTimerNotification.cancelScheduledLimitNotifications()
+        BindTimerNotification.cancelScheduledLimitNotifications() // cancel pending limit notifications
     }
     
     // updates private variables every tick
     private func _onTick(){
         self._secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
+        self._secondsPassedPreviouslyToday = _totalSeconds(on: Date())
         self._secondsPassedToday = self._secondsPassedThisBind + self._secondsPassedPreviouslyToday
         
         // update fraction
         _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
     }
     
-    // formats our seconds variables into hh, mm, ss (could we use a built in function for this instead?)
-    private func _formatSeconds(_ seconds:Int) -> String {
-        if seconds <= 0 {
-            return "00:00:00"
-        }
-        let hh: Int = seconds / 3600
-        let mm: Int = (seconds % 3600) / 60
-        let ss: Int = seconds % 60
-        return String(format: "%02d:%02d:%02d", hh, mm, ss)
-    }
-    
-    // totals bind times for any day
+    // Your function now lives inside the class and queries the persistent storage
     private func _totalSeconds(on day: Date) -> Int {
         let cal = Calendar.current
         let startOfDay = cal.startOfDay(for: day)
-        return _bindSessionHistory
-            .filter { cal.isDate($0.startDate, inSameDayAs: startOfDay) }
-            .reduce(0) { $0 + $1.durationSeconds }
+        let endOfDay = cal.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        // Fetch sessions specifically for this day from the database
+        let predicate = #Predicate<BindSession> {
+            $0.startDate >= startOfDay && $0.startDate < endOfDay
+        }
+        
+        let descriptor = FetchDescriptor<BindSession>(predicate: predicate)
+        
+        do {
+            let dailySessions = try modelContext.fetch(descriptor)
+            return dailySessions.reduce(0) { $0 + $1.durationSeconds }
+        } catch {
+            print("Fetch failed: \(error)")
+            return 0
+        }
     }
     
-    private func loadHistoryFromBundleJSON(fileName: String = "generatedBindData") {
-        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
-            print("generatedBindData.json not found in bundle")
-            return
-        }
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let decoded = try decoder.decode([BindSessionDTO].self, from: data)
-
-            // Map DTO -> BindSession (we ignore the JSON id and generate our own UUID like your struct does)
-            let mapped = decoded.map { dto in
-                BindSession(startDate: dto.startDate, durationSeconds: dto.durationSeconds)
-            }
-
-            // Replace or append, depending on your needs:
-            self._bindSessionHistory = mapped
-
-            // Optionally recompute today's running totals immediately
-            self._secondsPassedToday = self._totalSeconds(on: Date())
-            self._fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
-        } catch {
-            print("Failed to decode generatedBindData.json: \(error)")
-        }
-    }
+    // old
+//    private func loadHistoryFromBundleJSON(fileName: String = "generatedBindData") {
+//        guard let url = Bundle.main.url(forResource: fileName, withExtension: "json") else {
+//            print("generatedBindData.json not found in bundle")
+//            return
+//        }
+//        do {
+//            let data = try Data(contentsOf: url)
+//            let decoder = JSONDecoder()
+//            decoder.dateDecodingStrategy = .iso8601
+//            let decoded = try decoder.decode([BindSessionDTO].self, from: data)
+//
+//            // Map DTO -> BindSession (we ignore the JSON id and generate our own UUID like your struct does)
+//            let mapped = decoded.map { dto in
+//                BindSession(startDate: dto.startDate, durationSeconds: dto.durationSeconds)
+//            }
+//
+//            // Replace or append, depending on your needs:
+//            self._bindSessionHistory = mapped
+//
+//            // Optionally recompute today's running totals immediately
+//            self._secondsPassedToday = self._totalSeconds(on: Date())
+//            self._fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
+//        } catch {
+//            print("Failed to decode generatedBindData.json: \(error)")
+//        }
+//    }
 }
 
-private struct BindTimerKey: EnvironmentKey {
-    static let defaultValue = BindTimer()
-}
+//private struct BindTimerKey: EnvironmentKey {
+//    static let defaultValue = BindTimer()
+//}
+//
+//extension EnvironmentValues {
+//    var bindTimer: BindTimer {
+//        get { self[BindTimerKey.self] }
+//        set { self[BindTimerKey.self] = newValue }
+//    }
+//}
 
-extension EnvironmentValues {
-    var bindTimer: BindTimer {
-        get { self[BindTimerKey.self] }
-        set { self[BindTimerKey.self] = newValue }
-    }
-}
-
-extension BindTimer {
-    // Creates `days` days of fake sessions before today.
-    // Each day gets `sessionsPerDay` sessions with random durations.
-    func seedFakeHistory(days: Int = 7, sessionsPerDay: Int = 2, durationRange: ClosedRange<Int> = 5...1800) {
-        let calendar = Calendar.current
-        let now = Date()
-
-        for dayOffset in 1...days {
-            // Target date is N days before today
-            guard let day = calendar.date(byAdding: .day, value: -dayOffset, to: now) else { continue }
-            let startOfDay = calendar.startOfDay(for: day)
-
-            for s in 0..<sessionsPerDay {
-                // Stagger start times within the day (e.g., morning & afternoon)
-                let hour = s == 0 ? 9 : 15 // 9 AM and 3 PM
-                var components = calendar.dateComponents([.year, .month, .day], from: startOfDay)
-                components.hour = hour
-                components.minute = Int.random(in: 0..<60)
-                components.second = Int.random(in: 0..<60)
-
-                let startDate = calendar.date(from: components) ?? startOfDay
-                let duration = Int.random(in: durationRange)
-
-                _bindSessionHistory.append(
-                    BindSession(startDate: startDate, durationSeconds: duration)
-                )
-            }
-        }
-    }
-}
+// old
+//extension BindTimer {
+//    // Creates `days` days of fake sessions before today.
+//    // Each day gets `sessionsPerDay` sessions with random durations.
+//    func seedFakeHistory(days: Int = 7, sessionsPerDay: Int = 2, durationRange: ClosedRange<Int> = 5...1800) {
+//        let calendar = Calendar.current
+//        let now = Date()
+//
+//        for dayOffset in 1...days {
+//            // Target date is N days before today
+//            guard let day = calendar.date(byAdding: .day, value: -dayOffset, to: now) else { continue }
+//            let startOfDay = calendar.startOfDay(for: day)
+//
+//            for s in 0..<sessionsPerDay {
+//                // Stagger start times within the day (e.g., morning & afternoon)
+//                let hour = s == 0 ? 9 : 15 // 9 AM and 3 PM
+//                var components = calendar.dateComponents([.year, .month, .day], from: startOfDay)
+//                components.hour = hour
+//                components.minute = Int.random(in: 0..<60)
+//                components.second = Int.random(in: 0..<60)
+//
+//                let startDate = calendar.date(from: components) ?? startOfDay
+//                let duration = Int.random(in: durationRange)
+//
+//                _bindSessionHistory.append(
+//                    BindSession(startDate: startDate, durationSeconds: duration)
+//                )
+//            }
+//        }
+//    }
+//}

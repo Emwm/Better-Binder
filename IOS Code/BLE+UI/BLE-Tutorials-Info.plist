@@ -7,5 +7,9 @@
 		<string>Cabin-Italic-VariableFont_wdth,wght.ttf</string>
 		<string>Cabin-VariableFont_wdth,wght.ttf</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
 </dict>
 </plist>

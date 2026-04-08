@@ -12,6 +12,7 @@
 
 import SwiftUI
 import Foundation
+import SwiftData
 
 
 // helper function to change gauge color between two asset colors
@@ -57,18 +58,37 @@ private func _colorForProgress(_ p: Double,
 }
 
 struct TodayView: View {
-    // state properties here -----------------------------------
-    
     @Environment(BindManager.self) private var bsm
-    @Environment(\.bindTimer) private var timer
+    @Environment(BindTimer.self) private var timer
+    
+    @Query private var todaySessions: [BindSession]
+
+    init() {
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: .now)
+        let endOfToday = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
+
+        // The Predicate acts like a SQL "WHERE" clause
+        let filter = #Predicate<BindSession> { session in
+            session.startDate >= startOfToday && session.startDate < endOfToday
+        }
+
+        // Initialize the query with the filter
+        _todaySessions = Query(filter: filter, sort: \.startDate, order: .reverse)
+    }
+    
+    private func deleteSession(at offsets: IndexSet, from filteredList: [BindSession]) {
+        for index in offsets {
+            // Find the specific session in the filtered list
+            let sessionToDelete = filteredList[index]
+            
+            // Delete it from the persistent store by calling delete function in bind timer
+            timer.deleteBindSession(sessionToDelete)
+        }
+    }
     
     var body: some View {
         ScrollView{
-            //this is to change the background color
-//            Color.colorWhite
-//                .ignoresSafeArea()
-//                .saturation(0.7)
-            
             VStack{
                 
                 // Top today text ---------------------------
@@ -133,76 +153,54 @@ struct TodayView: View {
                         .font(.appBody())
                         .mediumPaddingBottom()
                 }
-                    
-                
-                let todaysSessions = timer.bindSessionHistory.filter { Calendar.current.isDateInToday($0.startDate) }
                 
                 // List View of today binding history ----------------------------
                 Text("List of Bind Sessions:") // list view of each bind today
                     .font(.appBodyBold())
                     .smallPaddingBottom()
                 
-                if todaysSessions.isEmpty {
+                if todaySessions.isEmpty {
                         Text("No history yet.")
                             .font(.appBody())
                 } else {
-                        List{
-                            ForEach(timer.bindSessionHistory.filter { Calendar.current.isDateInToday($0.startDate) }) { todayList in
-                                HStack{
-                                    VStack(alignment: .leading){
-                                        Text("\(todayList.startDate.formatted(date: .abbreviated, time: .omitted))")
-                                            .font(.appBody())
-                                        Text("\(todayList.startDate.formatted(date: .omitted, time: .shortened))")
-                                            .font(.appBody())
-                                            
-                                    }
-                                    Spacer()
-                                    Text("Duration: \(todayList.durationSeconds.asTimestamp())")
+                    List{
+                        ForEach(todaySessions) { todayList in
+                            HStack{
+                                VStack(alignment: .leading){
+                                    Text("\(todayList.startDate.formatted(date: .abbreviated, time: .omitted))")
+                                        .font(.appBody())
+                                    Text("\(todayList.startDate.formatted(date: .omitted, time: .shortened))")
                                         .font(.appBody())
                                 }
+                                Spacer()
+                                Text("Duration: \(todayList.durationSeconds.asTimestamp())")
+                                    .font(.appBody())
                             }
                         }
-                        .listStyle(.insetGrouped) // or .plain, .grouped, etc.
-                        .frame(height: 300)  // choose a height that fits your design
+                        .onDelete { indexSet in
+                                deleteSession(at: indexSet, from: todaySessions)
+                            }
+                        
                     }
+                    .listStyle(.insetGrouped) // or .plain, .grouped, etc.
+                    .frame(height: 300)  // choose a height that fits your design
+                }
                 
                 Spacer()
-                
-    //            // Testing Block ----------------------------
-    //            ZStack{
-    //                RoundedRectangle(cornerRadius: 14)
-    //                    .fill(Color(.systemGray5))
-    //                    .frame(width: 350, height: 140) // minimum size
-    //
-    //                VStack(spacing: 5){
-    //                    // temporary timer via buttons for testing
-    //                    Text("Temporary For Timer Testing")
-    //                        .font(.system(size: 20))
-    //                        .bold()
-    //                    Text("Time of this Bind:")
-    //                        .font(.system(size: 20))
-    //                    Text("\(timer.secondsPassedThisBind)") // time of this bind running here
-    //                        .font(.system(size: 20))
-    //                    if timer.state == .idle{
-    //                        Button("START"){
-    //                            timer.start()
-    //                        }
-    //                            .buttonStyle(.borderedProminent)
-    //                    }
-    //                    if timer.state == .running{
-    //                        Button("STOP"){
-    //                            timer.stop()
-    //                        }
-    //                            .buttonStyle(.borderedProminent)
-    //                    }
-    //                }
-    //            }
-    //            .padding(.horizontal)
             }
         }
     }
 }
+
 #Preview {
+    // 1. Create an in-memory container (clears every time the preview restarts)
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: BindSession.self, configurations: config)
+    
+    // 3. Initialize the manager with the mock context
+    let mockManager = BindTimer(modelContext: container.mainContext)
+    
     TodayView()
         .environment(BindManager())
+        .environment(mockManager)
 }

@@ -8,6 +8,7 @@
 import SwiftUI
 import Foundation
 import Charts
+import SwiftData
 
 // A simple model for charting daily totals
 private struct DayTotal: Identifiable {
@@ -17,7 +18,9 @@ private struct DayTotal: Identifiable {
 }
 
 struct HistoryView: View {
-    @Environment(\.bindTimer) private var timer
+    @Environment(BindTimer.self) private var timer
+    @Query(sort: \BindSession.startDate, order: .reverse) var bindSessionHistory: [BindSession] // load data into an array
+    
     
     @State private var expandedDays: Set<Date> = [] // Keep expansion state per day
     @State private var scrollXPosition: Date?
@@ -48,7 +51,7 @@ struct HistoryView: View {
     
     private var weekTotals: [DayTotal] {
         // Build totals for only the selected week, ensuring an entry per day (Sun-Sat)
-        let sessionsInWeek = timer.bindSessionHistory.filter { session in
+        let sessionsInWeek = bindSessionHistory.filter { session in
             let day = calendar.startOfDay(for: session.startDate)
             return selectedWeekRange.contains(day)
         }
@@ -67,7 +70,7 @@ struct HistoryView: View {
     }
     
     private var groupedByDaySorted: [(day: Date, sessions: [BindSession])] {
-        let grouped = Dictionary(grouping: timer.bindSessionHistory) { session in
+        let grouped = Dictionary(grouping: bindSessionHistory) { session in
             calendar.startOfDay(for: session.startDate)
         }
         return grouped
@@ -76,7 +79,7 @@ struct HistoryView: View {
     }
     
     private var dayTotals: [DayTotal] {
-        let grouped = Dictionary(grouping: timer.bindSessionHistory) { session in
+        let grouped = Dictionary(grouping: bindSessionHistory) { session in
             calendar.startOfDay(for: session.startDate)
         }
         return grouped
@@ -244,6 +247,14 @@ struct HistoryView: View {
     }
 }
 #Preview {
+    // 1. Create an in-memory container (clears every time the preview restarts)
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: BindSession.self, configurations: config)
+    
+    // 3. Initialize the manager with the mock context
+    let mockManager = BindTimer(modelContext: container.mainContext)
+    
     HistoryView()
+        .environment(mockManager)
 }
 

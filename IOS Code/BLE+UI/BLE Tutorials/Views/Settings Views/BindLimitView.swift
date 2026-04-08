@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct BindLimitView: View {
     
-    @Environment(\.bindTimer) private var timer
+    @Environment(BindTimer.self) private var timer
     
     // Holds the raw text input from the user
     @State private var inputText: String = ""
@@ -61,6 +62,14 @@ struct BindLimitView: View {
     }
 }
 #Preview {
+    // 1. Create an in-memory container (clears every time the preview restarts)
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: BindSession.self, configurations: config)
+    
+    // 3. Initialize the manager with the mock context
+    let mockManager = BindTimer(modelContext: container.mainContext)
+    
     BindLimitView()
+        .environment(mockManager)
 }
 

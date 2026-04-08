@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TestTimerView: View {
-    @Environment(\.bindTimer) private var timer
-    // public varaibles in BindTimer class -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindSessionHistory, bindTimerState, secondsPassedThisBind
+    @Environment(BindTimer.self) private var timer
     
     @State private var newTimeLimit = 0.0
     
@@ -78,6 +78,13 @@ struct TestTimerView: View {
     }
 }
 #Preview {
+    // 1. Create an in-memory container (clears every time the preview restarts)
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: BindSession.self, configurations: config)
+    
+    // 3. Initialize the manager with the mock context
+    let mockManager = BindTimer(modelContext: container.mainContext)
+    
     TestTimerView()
-        .environment(BindManager())
+        .environment(mockManager)
 }
