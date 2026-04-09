@@ -22,7 +22,7 @@ struct BindLimitView: View {
             Text("Set New Bind Limit")
                 .font(.appSubHeader())
 
-            TextField("Enter limit in hours (e.g. 12.5)", text: $inputText)
+            TextField("Enter limit in hours (e.g. 6.5)", text: $inputText)
                 .font(.appBody())
                 .keyboardType(.decimalPad)
                 .textInputAutocapitalization(.never)

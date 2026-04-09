@@ -12,18 +12,38 @@ import SwiftData
 struct BLE_TutorialsApp: App {
     let container: ModelContainer
     
+    @State private var ble: BLEManager
+    @State private var bsm: BindManager
+    @State private var bindTimer: BindTimer
+    
     init() {
-        container = try! ModelContainer(for: BindSession.self) // initialize persistant storage
+        let safeContainer = try! ModelContainer(for: BindSession.self)
+        self.container = safeContainer
+        
+        //setup managers
+        let initalizedTimer = BindTimer(modelContext: safeContainer.mainContext)
+        let initalizedBSM = BindManager()
+        let initalizedBLE = BLEManager()
+        
+        //let them communicate in the background
+        initalizedBLE.onNewDataReceived = { newValue in
+            initalizedBSM.setRawInt(for: newValue, timer: initalizedTimer)
+        }
+        
+        _bindTimer = State(initialValue: initalizedTimer)
+        _bsm = State(initialValue: initalizedBSM)
+        _ble = State(initialValue: initalizedBLE)
+        
+        //container = try! ModelContainer(for: BindSession.self) // initialize persistant storage
     }
     
-    @State private var ble = BLEManager()
-    @State private var bsm = BindManager()
+
     
     var body: some Scene {
         WindowGroup {
             MainTabView()
                 .environment(ble)
-                .environment(BindTimer(modelContext: container.mainContext))
+                .environment(bindTimer)
                 .environment(bsm)
         }
         .modelContainer(container) // sets up database

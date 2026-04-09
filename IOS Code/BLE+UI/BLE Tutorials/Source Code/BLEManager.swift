@@ -22,6 +22,9 @@ final class BLEManager: NSObject, @unchecked Sendable {
     var devices: [Device] = []
     var statusText: String = "---"
     var statusInt: Double = 0
+    
+    //fix for uiview bugs
+    var onNewDataReceived: ((Double) -> Void)?
 
     struct Device: Identifiable, Hashable {
         let id: UUID
@@ -191,6 +194,8 @@ extension BLEManager: CBPeripheralDelegate {
             
             // 2. Use 'if let' to safely parse the number
             if let numericValue = Double(cleanText) {
+                //fix for ui bug 2
+                self.onNewDataReceived?(numericValue)
                 // 3. Ensure the UI update happens on the Main Thread
                 Task { @MainActor in
                     self.statusText = cleanText

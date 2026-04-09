@@ -46,32 +46,6 @@ class BindTimer{
     // data model setup
     var modelContext: ModelContext
     
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
-        _seedDataIfNeeded(context: modelContext)
-        
-        // to setup user defaults for data persistance
-        if UserDefaults.standard.bool(forKey: kIsBindRunningKey),
-           let savedDate = UserDefaults.standard.object(forKey: kActiveBindStartDateKey) as? Date {
-            // load saved data
-            _dateStartedThisBind = savedDate // load saved value
-            
-            // set state
-            _state = .running // will this overide bind manager?
-            
-            // recompute derived values
-            _secondsPassedThisBind = Int(Date.now.timeIntervalSince(savedDate))
-            _secondsPassedPreviouslyToday = _totalSeconds(on: Date())
-            _secondsPassedToday = _secondsPassedThisBind + _secondsPassedPreviouslyToday
-            _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
-            
-            // create the timer
-            _createTimer()
-        } else {
-            _state = .idle // will this overide bind manager?
-        }
-    }
-    
     // user defaults to help with persistance
     private let kActiveBindStartDateKey = "activeBindStartDate"
     private let kIsBindRunningKey = "isBindRunning"
@@ -125,6 +99,34 @@ class BindTimer{
     }
     var secondsBindLimit: Double {
         return _secondsBindLimit
+    }
+    
+    // initialize values, these will overwrite default values established above if there is persisted data
+    
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        _seedDataIfNeeded(context: modelContext)
+        
+        // to setup user defaults for data persistance
+        if UserDefaults.standard.bool(forKey: kIsBindRunningKey),
+           let savedDate = UserDefaults.standard.object(forKey: kActiveBindStartDateKey) as? Date {
+            // load saved data
+            _dateStartedThisBind = savedDate // load saved value
+            
+            // set state
+            _state = .running // will this overide bind manager?
+            
+            // recompute derived values
+            _secondsPassedThisBind = Int(Date.now.timeIntervalSince(savedDate))
+            _secondsPassedPreviouslyToday = _totalSeconds(on: Date())
+            _secondsPassedToday = _secondsPassedThisBind + _secondsPassedPreviouslyToday
+            _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
+            
+            // create the timer
+            _createTimer()
+        } else {
+            _state = .idle // will this overide bind manager?
+        }
     }
     
     // Public Methods (accessible outside of this class) --------------------------------------------

@@ -74,7 +74,7 @@ class BindManager {
         let oldState = self.currentState
         
         //setting state based on what we got, numbers should change
-        if self._perCompression < minPercent {
+        if self.perCompression < minPercent {
                     self.currentState = .loose
         } else if self._perCompression > maxPercent+overCompressionGap {
                     self.currentState = .overCompressed
