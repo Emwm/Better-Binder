@@ -27,7 +27,7 @@ class BindManager {
     }() {
         didSet {
             if oldValue != currentState {
-                //save the new state to user defaults so when the app dissapears werechill
+                // if we see a state change, update the new stored value to the new state
                 UserDefaults.standard.set(currentState.rawValue, forKey: "savedCompressionState")
             }
         }

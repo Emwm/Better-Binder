@@ -9,12 +9,10 @@
  Used this playlist of tutorials:  https://www.youtube.com/watch?v=AFeo84CgRRQ&list=PLpSG4DtJWIHW1BHjqM6xqEF1jw4h1noYj&index=4
  and built in AI on XCode
  
- Summary: BindTimer with two states (idle and running) tracks time of each session (from start to stop), updates history list after every bind session, constantly calculates total time passed (as well as fraction of time passed vs time limit) for todays date, and sends notifications when a time limit is reached
+ Summary: BindTimer with two states (idle and running) tracks time of each session (from start to stop), updates bind history data model after every bind session, constantly calculates total time passed (as well as fraction of time passed vs time limit) for todays date, and sends notifications when a time limit is reached
  
  To Update:
  - need to consider behavior at midnight, will it be appended with previous days date or split into two different bind sessions?
- - do we want the ability to delete entries if there is a glitch?
- - use swift data to have data persistance (make the test functionality so that theres an entry box for simulating data as well with entrie spots for # days previous to today, # seconds passed, # start time?)
  */
 
 import Foundation
@@ -28,13 +26,6 @@ enum BindTimerState: String {
     case running
 }
 
-// format for saving each "this bind" session
-//struct BindSession: Identifiable, Equatable {
-//    let id = UUID()
-//    let startDate: Date
-//    var durationSeconds: Int
-//}
-
 // this is to load generated data from json
 private struct BindSessionDTO: Codable {
     let startDate: Date
@@ -42,7 +33,6 @@ private struct BindSessionDTO: Codable {
 }
 
 /*
- calculates properties -> how much time passed and left in time limit (seconds value and formated strings hh:mm:ss), fraction of time passed vs time limit
  public methods -> start(), stop(), setDailyBindLimit()
  public varaibles -> secondsPassedToday, secondsPassedTodayString, secondsLeftToday, secondsLeftTodayString, fractionPassedToday, fractionLeftToday, bindTimerState, secondsPassedThisBind
  private methods -> _createTimer(), _killTimer(), _onTick(), _totalSeconds(on day: Date)
@@ -60,18 +50,31 @@ class BindTimer{
         self.modelContext = modelContext
         _seedDataIfNeeded(context: modelContext)
         
-        // ADDED: Check if there was an active session running before the app was killed
-        if let savedDate = UserDefaults.standard.object(forKey: "activeBindStartDate") as? Date {
-            _dateStartedThisBind = savedDate
-            _state = .running
+        // to setup user defaults for data persistance
+        if UserDefaults.standard.bool(forKey: kIsBindRunningKey),
+           let savedDate = UserDefaults.standard.object(forKey: kActiveBindStartDateKey) as? Date {
+            // load saved data
+            _dateStartedThisBind = savedDate // load saved value
+            
+            // set state
+            _state = .running // will this overide bind manager?
+            
+            // recompute derived values
+            _secondsPassedThisBind = Int(Date.now.timeIntervalSince(savedDate))
+            _secondsPassedPreviouslyToday = _totalSeconds(on: Date())
+            _secondsPassedToday = _secondsPassedThisBind + _secondsPassedPreviouslyToday
+            _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
+            
+            // create the timer
             _createTimer()
+        } else {
+            _state = .idle // will this overide bind manager?
         }
-        
     }
     
-    // old list based stuff
-    //    // tracking variables (all history)
-    //    private var _bindSessionHistory: [BindSession] = [] // public and observable array of all bind sessions
+    // user defaults to help with persistance
+    private let kActiveBindStartDateKey = "activeBindStartDate"
+    private let kIsBindRunningKey = "isBindRunning"
     
     // timer
     private var _state: BindTimerState = .idle
@@ -117,7 +120,7 @@ class BindTimer{
     var state: BindTimerState{
         _state
     }
-    var secondsPassedThisBind: Int { // making public for testing
+    var secondsPassedThisBind: Int {
         return _secondsPassedThisBind
     }
     var secondsBindLimit: Double {
@@ -128,21 +131,19 @@ class BindTimer{
    
     // resets timer values and starts timer
     func start(){
-        // ADDED: Only set Date.now if we don't already have a saved start date
-        if let savedDate = UserDefaults.standard.object(forKey: "activeBindStartDate") as? Date {
-            _dateStartedThisBind = savedDate
-        } else {
-            _dateStartedThisBind = Date.now
-            UserDefaults.standard.set(_dateStartedThisBind, forKey: "activeBindStartDate")
-        }
-        
-        _secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
+        // track start of this bind
+        _dateStartedThisBind = Date.now
+        // update user defaults for persistance
+        UserDefaults.standard.set(_dateStartedThisBind, forKey: kActiveBindStartDateKey)
+        UserDefaults.standard.set(true, forKey: kIsBindRunningKey)
+        // start timer
         _state = .running
         _createTimer()
     }
     
-    // saves time passed this bind to bindsessionhistory list and stops timer
+    // saves time passed this bind to bindsessionhistory model and stops timer
     func stop(){
+        // recalculate seconds passed this bind before saving, to ensure accuracy
         _secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
         
         // only add to data set if it is greater than 2 seconds
@@ -155,8 +156,9 @@ class BindTimer{
         _state = .idle
         _killTimer()
         
-        // ADDED: Clear the active session from UserDefaults so the next start() gets a fresh Date.now
-        UserDefaults.standard.removeObject(forKey: "activeBindStartDate")
+        // reset user defaults for persistance
+        UserDefaults.standard.removeObject(forKey: kActiveBindStartDateKey)
+        UserDefaults.standard.set(false, forKey: kIsBindRunningKey)
     }
     
     func setDailyBindLimit(seconds: TimeInterval) {
@@ -168,14 +170,25 @@ class BindTimer{
     
     func addBindSession(startDate: Date, durationSeconds: Int){
         let newTimeSession = BindSession(startDate: startDate, durationSeconds: durationSeconds)
-        modelContext.insert(newTimeSession) // saves to persistant storage
+        modelContext.insert(newTimeSession) // add to data model
+        do { // help it to prompt to save to data model
+            try modelContext.save()
+        } catch {
+            print("Save failed: \(error)")
+        }
     }
     
     func deleteBindSession(_ item: BindSession){
-        modelContext.delete(item)
-        
+        modelContext.delete(item) //remove from data model
+        do { // help it to prompt a save to data model
+            try modelContext.save()
+        } catch {
+            print("Save failed: \(error)")
+        }
+        // Recompute derived values...
         self._secondsPassedPreviouslyToday = _totalSeconds(on: Date())
         self._secondsPassedToday = self._secondsPassedThisBind + self._secondsPassedPreviouslyToday
+        _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
     }
     
     // Private Methods (accessible only inside of this class) --------------------------------------------
@@ -187,27 +200,18 @@ class BindTimer{
             self?._onTick() // called every second
         }
         
-        // schedule notifications (should make this into a for loop or add private function helper
-        if secondsLeftToday > 0 {
-            // schedules notifications (note if timeLeftToday==0 at start of this timer, the notifications will be sent right away)
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-1", seconds: TimeInterval(secondsLeftToday), title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-2", seconds: TimeInterval(secondsLeftToday) + _secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-3", seconds: TimeInterval(secondsLeftToday) + Double(2)*_secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-            
-            // for loop below does not work for some reason
-    //        // schedules i notifications starting when seconds left runs out, evenly spaced by secondsBetweenNotifications
-    //        for i in 1..._notificationLimit{
-    //            let id = "time-limit-notification-\(i)"
-    //            BindTimerNotification.scheduleNotification(identifier: id, seconds: TimeInterval(secondsLeft) + Double(i)*_secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-    //        }
-        } else { // need a buffer, can not schedule notification in 0 seconds
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-1", seconds: 2, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-2", seconds: 2 + _secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-            BindTimerNotification.scheduleNotification(identifier: "time-limit-notification-3", seconds: 2 + Double(2)*_secondsBetweenNotifications, title: "Limit Reached", body: "You have binded for 8 hours today, please loosen binder for the rest of the day")
-        }
+        // Ensure derived state is up to date before scheduling
+        self._secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
+        self._secondsPassedPreviouslyToday = _totalSeconds(on: Date())
+        self._secondsPassedToday = self._secondsPassedThisBind + self._secondsPassedPreviouslyToday
+        _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
+
+        BindTimerNotification.cancelScheduledLimitNotifications() // cancel old notifications
+        _scheduleLimitNotifications() //schedule new notifications
+        
     }
     
-    // if a timer exists it gets rid of it
+    // if a timer exists it gets rid of it and kills notifications
     private func _killTimer(){
         _timer?.invalidate()
         _timer = nil
@@ -282,6 +286,52 @@ class BindTimer{
             
         } catch {
             print("Seeding failed: \(error)")
+        }
+    }
+    
+    private func _scheduleLimitNotifications() {
+        // Always compute fresh ‘secondsLeftToday’ based on current derived state
+        // Here, secondsLeftToday is derived from _secondsPassedToday and _secondsBindLimit
+        // Make sure _secondsPassedToday is up to date before calling this method.
+        if secondsLeftToday > 0 {
+            BindTimerNotification.scheduleNotification(
+                identifier: "time-limit-notification-1",
+                seconds: TimeInterval(secondsLeftToday),
+                title: "Limit Reached",
+                body: "You have binded for 8 hours today, please loosen binder for the rest of the day"
+            )
+            BindTimerNotification.scheduleNotification(
+                identifier: "time-limit-notification-2",
+                seconds: TimeInterval(secondsLeftToday) + _secondsBetweenNotifications,
+                title: "Limit Reached",
+                body: "You have binded for 8 hours today, please loosen binder for the rest of the day"
+            )
+            BindTimerNotification.scheduleNotification(
+                identifier: "time-limit-notification-3",
+                seconds: TimeInterval(secondsLeftToday) + Double(2) * _secondsBetweenNotifications,
+                title: "Limit Reached",
+                body: "You have binded for 8 hours today, please loosen binder for the rest of the day"
+            )
+        } else {
+            // If already at/over limit, schedule soon
+            BindTimerNotification.scheduleNotification(
+                identifier: "time-limit-notification-1",
+                seconds: 2,
+                title: "Limit Reached",
+                body: "You have binded for 8 hours today, please loosen binder for the rest of the day"
+            )
+            BindTimerNotification.scheduleNotification(
+                identifier: "time-limit-notification-2",
+                seconds: 2 + _secondsBetweenNotifications,
+                title: "Limit Reached",
+                body: "You have binded for 8 hours today, please loosen binder for the rest of the day"
+            )
+            BindTimerNotification.scheduleNotification(
+                identifier: "time-limit-notification-3",
+                seconds: 2 + Double(2) * _secondsBetweenNotifications,
+                title: "Limit Reached",
+                body: "You have binded for 8 hours today, please loosen binder for the rest of the day"
+            )
         }
     }
 }
