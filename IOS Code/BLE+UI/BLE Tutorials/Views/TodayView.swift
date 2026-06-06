@@ -61,6 +61,9 @@ struct TodayView: View {
     @Environment(BindManager.self) private var bsm
     @Environment(BindTimer.self) private var timer
     
+    //changable vars. for button
+    @State private var buttonState = false
+    
     @Query private var todaySessions: [BindSession]
 
     init() {
@@ -136,6 +139,21 @@ struct TodayView: View {
                 
                 // Current binding state --------------------
                 
+                Button(action: {
+                    if timer.state == .idle {
+                        timer.start()
+                    } else{
+                        timer.stop()
+                    }
+                    
+                    buttonState.toggle()
+                }) {
+                    Text(buttonState ? "Start Timer" : "Stop Timer")
+                        .font(.appBody())
+                        
+                }.buttonStyle(.borderedProminent)
+                    .tint(buttonState ? .accent : .colorCoral)
+                
                 Text("Current State: \(String(describing: bsm.currentState))")
                     .font(.appBody())
                     .mediumPaddingBottom()
@@ -201,4 +219,5 @@ struct TodayView: View {
     TodayView()
         .environment(BindManager())
         .environment(mockManager)
+        .modelContainer(container)
 }
