@@ -21,6 +21,7 @@ struct JournalListView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 50, height: 50)
+                        .padding(.horizontal, 5)
                     Text("Journal")
                         .font(.appHeader())
                         .foregroundColor(.colorDarkCoral)
@@ -29,25 +30,37 @@ struct JournalListView: View {
                         .scaledToFit()
                         .frame(width: 50, height: 50)
                         .scaleEffect(x: -1, y: 1)
+                        .padding(.horizontal, 5)
                 }
-                Text("Create a journal entry to reflect on how you felt binding today.")
+                .padding(.horizontal)
+                .mediumPaddingBottom()
+                
+                NavigationLink {
+                    WellnessVisualHistoryView()
+                } label: {
+                    HStack {
+                        Text("Visual History")
+                            .font(.appBody())
+                        Image(systemName: "chevron.right")
+                    }
+                }
+                .mediumPaddingBottom()
+                
+                Text("List of Previous Entries:")
                     .font(.appBody())
-                    .multilineTextAlignment(.center)
-                    .frame(width: 300)
             }
-            List(allEntries) { entry in
-                VStack(alignment: .leading){
-                    Text(entry.date.formatted(date: .abbreviated, time: .shortened))
-                        .font(.appBodyBold())
-                        .smallPaddingBottom()
-                    
-                    Text(entry.text)
-                        .lineLimit(3) // Show a preview
-                        .font(.appBody())
-                }
-                HStack {
-                    Text("Physical Discomfort: \(Int(entry.physicalWellness))/10").font(.appSmallCaption())
-                    Text("Wellbeing: \(Int(entry.mentalWellness))/10").font(.appSmallCaption())
+            List(allEntries.sorted(by: { $0.date > $1.date })) { entry in
+                NavigationLink {
+                    JournalDetailView(entry: entry)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(entry.date.formatted(date: .abbreviated, time: .shortened))
+                            .font(.appBody())
+                        Text("Physical: \(Int(entry.physicalWellness)) / 10   |   Emotional: \(Int(entry.mentalWellness)) / 10")
+                            .font(.appSmallCaption())
+                            .foregroundColor(.secondary)
+                    }
+                    .smallPaddingBottom()
                 }
             }
             .toolbar {
