@@ -38,14 +38,15 @@ struct DeleteTodayView: View {
     
     var body: some View {
         HStack {
-            Text("Delete Today Data:")
+            Text("Delete Today's Data:")
                 .font(.appBody())
             Button(role: .destructive) {
                 showConfirmDelete = true
             } label: {
-                Text("Delete Today")
+                Text("Delete")
             }
             .font(.appBody())
+            .buttonStyle(.borderedProminent)
         }
         .smallPaddingBottom()
         .padding(.horizontal)

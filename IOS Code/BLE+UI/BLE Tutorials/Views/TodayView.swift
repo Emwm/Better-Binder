@@ -108,10 +108,11 @@ struct TodayView: View {
                 
                 Text(Date.now.formatted(date: .long, time: .omitted))
                     .font(.appSubHeader())
-                    .largePaddingBottom()
+                    .foregroundColor(.colorDarkBlue)
+                    .mediumPaddingBottom()
                 
                 // Time today of binding ---------------------------------
-                Text("Total Binding Time:")
+                Text("Total Time Today:")
                     .font(.appBodyBold())
                     .smallPaddingBottom()
                 Text("\(timer.secondsPassedTodayString)") // total time today
@@ -135,43 +136,52 @@ struct TodayView: View {
                         .font(.appSmallCaption())
                 }
                 .padding(.horizontal)
-                .largePaddingBottom()
+                .mediumPaddingBottom()
                 
                 // Current binding state --------------------
-                
-                Button(action: {
-                    if timer.state == .idle {
-                        timer.start()
-                    } else{
-                        timer.stop()
-                    }
+                ZStack{
+                    // Background rectangle
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color(.colorLightBlue))
                     
-                    buttonState.toggle()
-                }) {
-                    Text(buttonState ? "Start Timer" : "Stop Timer")
-                        .font(.appBody())
+                    VStack{
+                        // Button
+                        Button(action: {
+                            if timer.state == .idle {
+                                timer.start()
+                            } else{
+                                timer.stop()
+                            }
+                            
+                            buttonState.toggle()
+                        }) {
+                            Text(buttonState ? "Stop Timer" : "Start Timer")
+                                .font(.appBody())
+                                
+                        }.buttonStyle(.borderedProminent)
+                            .tint(buttonState ? .accent : .colorDarkBlue)
+                            .mediumPaddingBottom()
+                            .largePaddingTop()
                         
-                }.buttonStyle(.borderedProminent)
-                    .tint(buttonState ? .accent : .colorCoral)
-                
-                Text("Current State: \(String(describing: bsm.currentState))")
-                    .font(.appBody())
-                    .mediumPaddingBottom()
-                
-                Text("Current Bind Session:")
-                    .font(.appBody())
-                if timer.state == .running {
-                    Text("\(timer.secondsPassedThisBind.asTimestamp())")
-                        .font(.appBody())
-                        .mediumPaddingBottom()
-                } else{
-                    Text("00:00:00")
-                        .font(.appBody())
-                        .mediumPaddingBottom()
+                        Text("Current Session Time:")
+                            .font(.appBody())
+                        if timer.state == .running {
+                            Text("\(timer.secondsPassedThisBind.asTimestamp())")
+                                .font(.appBody())
+                                .largePaddingBottom()
+                        } else{
+                            Text("00:00:00")
+                                .font(.appBody())
+                                .largePaddingBottom()
+                        }
+                    }
                 }
+                . mediumPaddingBottom()
+                .padding(.horizontal, 20)
+
                 
                 // List View of today binding history ----------------------------
-                Text("List of Bind Sessions:") // list view of each bind today
+                Text("Previous Sessions:") // list view of each bind today
                     .font(.appBodyBold())
                     .smallPaddingBottom()
                 
@@ -189,8 +199,12 @@ struct TodayView: View {
                                         .font(.appBody())
                                 }
                                 Spacer()
-                                Text("Duration: \(todayList.durationSeconds.asTimestamp())")
-                                    .font(.appBody())
+                                VStack(alignment: .leading){
+                                    Text("Duration:")
+                                        .font(.appBody())
+                                    Text("\(todayList.durationSeconds.asTimestamp())")
+                                        .font(.appBody())
+                                }
                             }
                         }
                         .onDelete { indexSet in

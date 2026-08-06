@@ -24,22 +24,20 @@ struct HistoryView: View {
     @State private var expandedDays: Set<Date> = [] // Keep expansion state per day
     @State private var scrollXPosition: Date?
     
-    @State private var weekOffset: Int = 0 // 0 = current week, -1 = previous week, etc.
+    @State private var selectedDate: Date = Date()
+    @State private var showingWeekPicker: Bool = false
     
     private var calendar: Calendar { Calendar.current }
     
     private var startOfWeek: Date {
-        // Determine the start of week (Sunday) for today shifted by weekOffset
+        // Determine the start of week (Sunday) for the selectedDate
         var cal = calendar
         cal.firstWeekday = 1 // 1 = Sunday
-        let today = Date()
-        let startOfToday = cal.startOfDay(for: today)
-        let weekday = cal.component(.weekday, from: startOfToday)
-        // Move back to Sunday of current week
+        let startOfSelected = cal.startOfDay(for: selectedDate)
+        let weekday = cal.component(.weekday, from: startOfSelected)
         let daysFromSunday = weekday - cal.firstWeekday
-        let currentWeekSunday = cal.date(byAdding: .day, value: -daysFromSunday, to: startOfToday) ?? startOfToday
-        // Apply week offset
-        return cal.date(byAdding: .day, value: weekOffset * 7, to: currentWeekSunday) ?? currentWeekSunday
+        let currentWeekSunday = cal.date(byAdding: .day, value: -daysFromSunday, to: startOfSelected) ?? startOfSelected
+        return currentWeekSunday
     }
     
     private var endOfWeek: Date {
@@ -108,7 +106,7 @@ struct HistoryView: View {
                 // buttons and week label at top of chart------
                 HStack {
                     Button {
-                        weekOffset -= 1
+                        selectedDate = calendar.date(byAdding: .day, value: -7, to: selectedDate) ?? selectedDate
                     } label: {
                         Image(systemName: "chevron.left")
                     }
@@ -117,23 +115,28 @@ struct HistoryView: View {
                     Spacer()
                     
                     VStack(spacing: 2) {
-                        Text("Week of \(startOfWeek.formatted(.dateTime.month(.abbreviated).day().year()))")
+                        Text("\(startOfWeek.formatted(.dateTime.month(.abbreviated).day().year())) – \(endOfWeek.formatted(.dateTime.month(.abbreviated).day().year()))")
                             .font(.appSmallCaptionBold())
                         Text("\(startOfWeek.formatted(.dateTime.weekday(.wide))) - \(calendar.date(byAdding: .day, value: 6, to: startOfWeek)!.formatted(.dateTime.weekday(.wide)))")
                             .font(.appSmallCaption())
                     }
+                    .onTapGesture { showingWeekPicker = true }
                     
                     Spacer()
                     
                     Button {
-                        if weekOffset < 0 { // prevent going into future weeks
-                            weekOffset += 1
+                        let nextWeek = calendar.date(byAdding: .day, value: 7, to: selectedDate) ?? selectedDate
+                        if nextWeek <= Date() { // prevent going into future weeks
+                            selectedDate = nextWeek
                         }
                     } label: {
                         Image(systemName: "chevron.right")
                     }
                     .buttonStyle(.plain)
-                    .disabled(weekOffset >= 0)
+                    .disabled({
+                        let nextWeek = calendar.date(byAdding: .day, value: 7, to: selectedDate) ?? selectedDate
+                        return nextWeek > Date()
+                    }())
                 }
                 .padding(.horizontal)
                 
@@ -187,6 +190,17 @@ struct HistoryView: View {
                 .chartYScale(type: .linear)
                 .frame(height: 220)
                 .padding(.horizontal, 25)
+                .sheet(isPresented: $showingWeekPicker) {
+                    VStack {
+                        DatePicker("Select a week", selection: $selectedDate, displayedComponents: [.date])
+                            .datePickerStyle(.graphical)
+                            .padding()
+
+                        Button("Done") { showingWeekPicker = false }
+                            .buttonStyle(.borderedProminent)
+                    }
+                    .presentationDetents([.medium, .large])
+                }
                 
                 // History List ---------------------------
                 List {
@@ -254,4 +268,3 @@ struct HistoryView: View {
     HistoryView()
         .environment(mockManager)
 }
-

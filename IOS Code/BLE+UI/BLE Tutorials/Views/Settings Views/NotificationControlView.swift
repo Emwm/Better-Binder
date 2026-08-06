@@ -31,11 +31,11 @@ struct NotificationControlView: View{
                 .font(.appBody())
             }
             else{
-                Text ("Notifications are enabled :)")
+                Text ("Notifications are enabled")
                     .font(.appBody())
             }
             
-            Button ("send test notification"){
+            Button ("Send test notification"){
                 BindTimerNotification.scheduleNotification(identifier: "my-notification", seconds: 5, title: "Test notification", body: "Some message")
             }
             .buttonStyle(.borderedProminent)
@@ -44,10 +44,21 @@ struct NotificationControlView: View{
             Spacer()
         }
         // this is to help user allow notifications with pop up on the screen to enable notifications
+        .onAppear {
+            BindTimerNotification.checkAuthorization { authorized in
+                DispatchQueue.main.async {
+                    showWarning = !authorized
+                }
+            }
+        }
         .onChange(of: scenePhase) {
             if scenePhase == .active{ // only shows permission ask when on this page aka scene phase
                 //only show warning when not authorized
-                BindTimerNotification.checkAuthorization{ authorized in showWarning = !authorized}
+                BindTimerNotification.checkAuthorization{ authorized in
+                    DispatchQueue.main.async {
+                        showWarning = !authorized
+                    }
+                }
             }
         }
     }
@@ -55,3 +66,4 @@ struct NotificationControlView: View{
 #Preview{
     NotificationControlView()
 }
+

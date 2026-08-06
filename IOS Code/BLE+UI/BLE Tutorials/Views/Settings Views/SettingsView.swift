@@ -25,20 +25,20 @@ struct SettingsView: View {
             
             NavigationStack{
                 Form{
-                    Section(header: Text("Device")) {
-                        NavigationLink{
-                            BLEControlView()
-                        } label: {
-                            Label("Device Connection", systemImage: "badge.plus.radiowaves.right")
-                        }
-                        .font(.appBody())
-                        NavigationLink{
-                            CalibrationView()
-                        } label: {
-                            Label("Compression Calibration", systemImage: "slider.horizontal.3")
-                        }
-                        .font(.appBody())
-                    }
+//                    Section(header: Text("Device")) {
+//                        NavigationLink{
+//                            BLEControlView()
+//                        } label: {
+//                            Label("Device Connection", systemImage: "badge.plus.radiowaves.right")
+//                        }
+//                        .font(.appBody())
+//                        NavigationLink{
+//                            CalibrationView()
+//                        } label: {
+//                            Label("Compression Calibration", systemImage: "slider.horizontal.3")
+//                        }
+//                        .font(.appBody())
+//                    }
                     Section(header: Text("Binding Tracking")) {
                         NavigationLink{
                             BindLimitView()
@@ -49,7 +49,7 @@ struct SettingsView: View {
                         NavigationLink{
                             DeleteTodayView()
                         } label: {
-                            Label("Delete Today Data", systemImage: "trash.circle.fill")
+                            Label("Delete Today's Data", systemImage: "trash.circle.fill")
                         }
                         .font(.appBody())
                     }
@@ -61,15 +61,15 @@ struct SettingsView: View {
                         }
                         .font(.appBody())
                     }
-                    Section(header: Text("Testing")) {
-                        NavigationLink{
-                            TestTimerView()
-                        } label: {
-                            Label("Test Timer", systemImage: "timer.circle.fill")
-                        }
-                        .font(.appBody())
-                        
-                    }
+//                    Section(header: Text("Testing")) {
+//                        NavigationLink{
+//                            TestTimerView()
+//                        } label: {
+//                            Label("Test Timer", systemImage: "timer.circle.fill")
+//                        }
+//                        .font(.appBody())
+//                        
+//                    }
                     /*Section(header: Text("Connection"), footer: Text("Automatically tries to find your ESP32 on launch.")){
                         Button("Setup Connection"){
                             //BLEControlView() fix with proper int control
