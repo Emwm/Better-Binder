@@ -61,8 +61,14 @@ struct TodayView: View {
     @Environment(BindManager.self) private var bsm
     @Environment(BindTimer.self) private var timer
     
-    //changable vars. for button
+    //changable var for timer button
     @State private var buttonState = false
+    
+    //state vars for information pop ups (so they act as buttons)
+    @State private var showTotalTimeTodayInfo = false
+    @State private var showTimerInfo = false
+    @State private var showPreviousSessionsInfo = false
+    
     
     @Query private var todaySessions: [BindSession]
 
@@ -94,7 +100,7 @@ struct TodayView: View {
         ScrollView{
             VStack{
                 
-                // Top today text ---------------------------
+                // Header Text Section ---------------------------
                 HStack{
                     Image("logo_solidFill_blue")
                         .resizable()
@@ -103,6 +109,58 @@ struct TodayView: View {
                     Text("Today") // list view of each bind today
                         .font(.appHeader())
                         .foregroundColor(.colorDarkBlue)
+                    
+                    // Info button using InfoButton helper file
+                    InfoButton(title: "Today Page Help", tint: .colorDarkBlue) {
+                        VStack {
+                            Text("Page Overview:")
+                                .font(.appBodyBold())
+                            Text("Track the time you spend binding today by using the start and stop timer button. You will recieve notifications when you have reached your time limit.")
+                                .font(.appBody())
+                                .mediumPaddingBottom()
+                        
+                            Text("On this page see your:")
+                                .font(.appBodyBold())
+                                .smallPaddingBottom()
+                            // manual list
+                            VStack(alignment: .leading) {
+                                Label("Total time binding today", systemImage: "1.circle")
+                                    .smallPaddingBottom()
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Label("Visually how close you are to reaching your binding limit", systemImage: "2.circle")
+                                    .smallPaddingBottom()
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Label("All of the binding sessions you have completed today", systemImage: "3.circle")
+                                    .smallPaddingBottom()
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .font(.appSmallCaption())
+                            .mediumPaddingBottom()
+                            
+                            Text("Tips:")
+                                .font(.appBodyBold())
+                                .smallPaddingBottom()
+                            // manual list
+                            VStack(alignment: .leading) {
+                                Label("Swipe left on an entry in previous sessions to delete it", systemImage: "1.circle")
+                                    .smallPaddingBottom()
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Label("Change your binding limit in settings", systemImage: "2.circle")
+                                    .smallPaddingBottom()
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .font(.appSmallCaption())
+                            .mediumPaddingBottom()
+                        }
+                    }
                 }
                 .largePaddingTop()
                 
@@ -111,7 +169,7 @@ struct TodayView: View {
                     .foregroundColor(.colorDarkBlue)
                     .mediumPaddingBottom()
                 
-                // Time today of binding ---------------------------------
+                // Total Time Today Section -----------------------------
                 Text("Total Time Today:")
                     .font(.appBodyBold())
                     .smallPaddingBottom()
@@ -119,7 +177,7 @@ struct TodayView: View {
                     .font(.appBody())
                     .smallPaddingBottom()
                 
-                // Gauge of fraction passed ------------------------
+                // Guage
                 Gauge(value: timer.fractionPassedToday, in: 0...1) {
                 } currentValueLabel: {
                 }
@@ -138,7 +196,7 @@ struct TodayView: View {
                 .padding(.horizontal)
                 .mediumPaddingBottom()
                 
-                // Current binding state --------------------
+                // Timer Section ----------------------
                 ZStack{
                     // Background rectangle
                     RoundedRectangle(cornerRadius: 14)
@@ -156,13 +214,14 @@ struct TodayView: View {
                             buttonState.toggle()
                         }) {
                             Text(buttonState ? "Stop Timer" : "Start Timer")
-                                .font(.appBody())
+                                .font(.appBodyBold())
                                 
                         }.buttonStyle(.borderedProminent)
                             .tint(buttonState ? .accent : .colorDarkBlue)
                             .mediumPaddingBottom()
                             .largePaddingTop()
                         
+                        // Current timer time
                         Text("Current Session Time:")
                             .font(.appBody())
                         if timer.state == .running {
@@ -178,10 +237,9 @@ struct TodayView: View {
                 }
                 . mediumPaddingBottom()
                 .padding(.horizontal, 20)
-
                 
-                // List View of today binding history ----------------------------
-                Text("Previous Sessions:") // list view of each bind today
+                // List of Todays Binding History Section --------------------
+                Text("Previous Sessions:")
                     .font(.appBodyBold())
                     .smallPaddingBottom()
                 
@@ -193,12 +251,18 @@ struct TodayView: View {
                         ForEach(todaySessions) { todayList in
                             HStack{
                                 VStack(alignment: .leading){
-                                    Text("\(todayList.startDate.formatted(date: .abbreviated, time: .omitted))")
+                                    Text("Start Time:")
                                         .font(.appBody())
                                     Text("\(todayList.startDate.formatted(date: .omitted, time: .shortened))")
                                         .font(.appBody())
                                 }
-                                Spacer()
+                                
+                                RoundedRectangle(cornerRadius: 1)
+                                    .fill(Color.colorDarkBlue)
+                                    .frame(width: 2)
+                                    .frame(height: 32)
+                                    .padding(.horizontal, 8)
+                                
                                 VStack(alignment: .leading){
                                     Text("Duration:")
                                         .font(.appBody())
@@ -215,7 +279,6 @@ struct TodayView: View {
                     .listStyle(.insetGrouped) // or .plain, .grouped, etc.
                     .frame(height: 300)  // choose a height that fits your design
                 }
-                
                 Spacer()
             }
         }

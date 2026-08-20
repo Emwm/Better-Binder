@@ -1,7 +1,7 @@
 import SwiftUI
 import Foundation
 
-struct WellnessVisualHistoryView: View {
+struct JournalVisualHistoryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Wellness Visual History")
@@ -20,5 +20,5 @@ struct WellnessVisualHistoryView: View {
 }
 
 #Preview {
-    WellnessVisualHistoryView()
+    JournalVisualHistoryView()
 }

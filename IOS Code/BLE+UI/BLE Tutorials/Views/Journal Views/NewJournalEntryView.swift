@@ -1,5 +1,5 @@
     //
-    //  JournalEntryView.swift
+    //  NewJournalEntryView.swift
     //  BLE Tutorials
     //
     //  Created by Reese Brogden on 3/30/26.

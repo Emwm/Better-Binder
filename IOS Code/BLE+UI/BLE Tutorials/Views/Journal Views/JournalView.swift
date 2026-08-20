@@ -1,5 +1,5 @@
 //
-//  JournalListView.swift
+//  JournalView.swift
 //  BLE Tutorials
 //
 //  Created by Reese Brogden on 3/30/26.
@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct JournalListView: View {
+struct JournalView: View {
     @State private var allEntries: [JournalEntry] = []
     @State private var isShowingEditor = false
 
@@ -36,22 +36,22 @@ struct JournalListView: View {
                 .mediumPaddingBottom()
                 
                 NavigationLink {
-                    WellnessVisualHistoryView()
+                    JournalVisualHistoryView()
                 } label: {
                     HStack {
                         Text("Visual History")
-                            .font(.appBody())
+                            .font(.appBodyBold())
                         Image(systemName: "chevron.right")
                     }
                 }
                 .mediumPaddingBottom()
                 
-                Text("List of Previous Entries:")
-                    .font(.appBody())
+                Text("Previous Entries:")
+                    .font(.appBodyBold())
             }
             List(allEntries.sorted(by: { $0.date > $1.date })) { entry in
                 NavigationLink {
-                    JournalDetailView(entry: entry)
+                    SavedJournalEntryView(entry: entry)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(entry.date.formatted(date: .abbreviated, time: .shortened))
@@ -75,5 +75,5 @@ struct JournalListView: View {
     }
 }
 #Preview{
-    JournalListView()
+    JournalView()
 }

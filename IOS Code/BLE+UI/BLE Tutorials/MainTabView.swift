@@ -24,7 +24,7 @@ struct MainTabView: View {
             }
             
             Tab("Journal", systemImage: "book", value: 1){
-                JournalListView()
+                JournalView()
             }
             Tab("History", systemImage:"calendar", value: 2 ){
                 HistoryView()

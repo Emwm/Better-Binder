@@ -17,15 +17,14 @@
 		0E2B55242F8055C900904954 /* FormatUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B55232F8055AB00904954 /* FormatUI.swift */; };
 		0E2B55252F8055C900904954 /* FormatUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B55232F8055AB00904954 /* FormatUI.swift */; };
 		0E2B55262F8055C900904954 /* FormatUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B55232F8055AB00904954 /* FormatUI.swift */; };
-		0E69A3132F79F5C4001FE064 /* BindManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E69A3122F79F5BF001FE064 /* BindManager.swift */; };
 		0E972B3E2F85A93D00CC1031 /* BindTimeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E972B3D2F85A92800CC1031 /* BindTimeModel.swift */; };
+		0EEB5A25303666A600ABA130 /* InfoButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EEB5A24303666A600ABA130 /* InfoButton.swift */; };
 		5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793722F787149006DDB32 /* HistoryView.swift */; };
 		5C2793752F78717D006DDB32 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793742F78717A006DDB32 /* TodayView.swift */; };
 		5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793772F7871B6006DDB32 /* BindTimer.swift */; };
 		5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793792F7871DC006DDB32 /* BindTimerNotification.swift */; };
 		5CB017942F6CC14700D50145 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB017932F6CC14700D50145 /* MainTabView.swift */; };
 		E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */; };
-		E33E76682F3BC0E6008D27B5 /* BLEManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E76632F3BC0E6008D27B5 /* BLEManager.swift */; };
 		E33E766B2F3BC0E6008D27B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E33E76612F3BC0E6008D27B5 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -52,8 +51,8 @@
 		0E2B551B2F804F6D00904954 /* Cabin-VariableFont_wdth,wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cabin-VariableFont_wdth,wght.ttf"; sourceTree = "<group>"; };
 		0E2B55222F80501200904954 /* BLE-Tutorials-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "BLE-Tutorials-Info.plist"; sourceTree = SOURCE_ROOT; };
 		0E2B55232F8055AB00904954 /* FormatUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatUI.swift; sourceTree = "<group>"; };
-		0E69A3122F79F5BF001FE064 /* BindManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindManager.swift; sourceTree = "<group>"; };
 		0E972B3D2F85A92800CC1031 /* BindTimeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimeModel.swift; sourceTree = "<group>"; };
+		0EEB5A24303666A600ABA130 /* InfoButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoButton.swift; sourceTree = "<group>"; };
 		5C2793722F787149006DDB32 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		5C2793742F78717A006DDB32 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		5C2793772F7871B6006DDB32 /* BindTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimer.swift; sourceTree = "<group>"; };
@@ -61,11 +60,37 @@
 		5CB017932F6CC14700D50145 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		E33E76612F3BC0E6008D27B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLE_TutorialsApp.swift; sourceTree = "<group>"; };
-		E33E76632F3BC0E6008D27B5 /* BLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEManager.swift; sourceTree = "<group>"; };
 		E3F9F86E2E9D591A00C7573A /* The Better Binder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Better Binder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3F9F87B2E9D591C00C7573A /* BLE TutorialsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BLE TutorialsTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3F9F8852E9D591C00C7573A /* BLE TutorialsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BLE TutorialsUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0EEB5A32303673B100ABA130 /* Exceptions for "Old Files" folder in "BLE Tutorials" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"BLE TutorialsTests/BLE_TutorialsTests.swift",
+				"BLE TutorialsUITests/BLE_TutorialsUITests.swift",
+				"BLE TutorialsUITests/BLE_TutorialsUITestsLaunchTests.swift",
+			);
+			target = E3F9F86D2E9D591A00C7573A /* BLE Tutorials */;
+		};
+		0EEB5A33303673B100ABA130 /* Exceptions for "Old Files" folder in "BLE TutorialsTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"BLE TutorialsTests/BLE_TutorialsTests.swift",
+			);
+			target = E3F9F87A2E9D591C00C7573A /* BLE TutorialsTests */;
+		};
+		0EEB5A39303673B800ABA130 /* Exceptions for "Old Files" folder in "BLE TutorialsUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"BLE TutorialsUITests/BLE_TutorialsUITests.swift",
+				"BLE TutorialsUITests/BLE_TutorialsUITestsLaunchTests.swift",
+			);
+			target = E3F9F8842E9D591C00C7573A /* BLE TutorialsUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0E5AE45A2F7B40B40087676E /* Settings Views */ = {
@@ -83,14 +108,14 @@
 			path = "Generated Data";
 			sourceTree = "<group>";
 		};
-		E3F9F87E2E9D591C00C7573A /* BLE TutorialsTests */ = {
+		0EEB5A293036735900ABA130 /* Old Files */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "BLE TutorialsTests";
-			sourceTree = "<group>";
-		};
-		E3F9F8882E9D591C00C7573A /* BLE TutorialsUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "BLE TutorialsUITests";
+			exceptions = (
+				0EEB5A32303673B100ABA130 /* Exceptions for "Old Files" folder in "BLE Tutorials" target */,
+				0EEB5A33303673B100ABA130 /* Exceptions for "Old Files" folder in "BLE TutorialsTests" target */,
+				0EEB5A39303673B800ABA130 /* Exceptions for "Old Files" folder in "BLE TutorialsUITests" target */,
+			);
+			path = "Old Files";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -127,6 +152,7 @@
 				0E2B55182F804F2D00904954 /* FontUI.swift */,
 				0E2B551A2F804F6D00904954 /* Cabin-Italic-VariableFont_wdth,wght.ttf */,
 				0E2B551B2F804F6D00904954 /* Cabin-VariableFont_wdth,wght.ttf */,
+				0EEB5A24303666A600ABA130 /* InfoButton.swift */,
 			);
 			path = Branding;
 			sourceTree = "<group>";
@@ -141,15 +167,6 @@
 			path = TimerLogic;
 			sourceTree = "<group>";
 		};
-		5CB0178C2F6CB8D500D50145 /* Source Code */ = {
-			isa = PBXGroup;
-			children = (
-				0E69A3122F79F5BF001FE064 /* BindManager.swift */,
-				E33E76632F3BC0E6008D27B5 /* BLEManager.swift */,
-			);
-			path = "Source Code";
-			sourceTree = "<group>";
-		};
 		E33E76662F3BC0E6008D27B5 /* BLE Tutorials */ = {
 			isa = PBXGroup;
 			children = (
@@ -161,7 +178,6 @@
 				0E2B55172F804F0F00904954 /* Branding */,
 				E33E766C2F3BC0EA008D27B5 /* Views */,
 				5C2793762F78719D006DDB32 /* TimerLogic */,
-				5CB0178C2F6CB8D500D50145 /* Source Code */,
 			);
 			path = "BLE Tutorials";
 			sourceTree = "<group>";
@@ -181,8 +197,7 @@
 			isa = PBXGroup;
 			children = (
 				E33E76662F3BC0E6008D27B5 /* BLE Tutorials */,
-				E3F9F87E2E9D591C00C7573A /* BLE TutorialsTests */,
-				E3F9F8882E9D591C00C7573A /* BLE TutorialsUITests */,
+				0EEB5A293036735900ABA130 /* Old Files */,
 				E3F9F86F2E9D591A00C7573A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -216,6 +231,7 @@
 				0E5AE45A2F7B40B40087676E /* Settings Views */,
 				0E5AE45B2F7B40DE0087676E /* Journal Views */,
 				0EC3DFE32F788C0E00E0C495 /* Generated Data */,
+				0EEB5A293036735900ABA130 /* Old Files */,
 			);
 			name = "BLE Tutorials";
 			packageProductDependencies = (
@@ -237,9 +253,6 @@
 			dependencies = (
 				E3F9F87D2E9D591C00C7573A /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				E3F9F87E2E9D591C00C7573A /* BLE TutorialsTests */,
-			);
 			name = "BLE TutorialsTests";
 			packageProductDependencies = (
 			);
@@ -259,9 +272,6 @@
 			);
 			dependencies = (
 				E3F9F8872E9D591C00C7573A /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				E3F9F8882E9D591C00C7573A /* BLE TutorialsUITests */,
 			);
 			name = "BLE TutorialsUITests";
 			packageProductDependencies = (
@@ -352,14 +362,13 @@
 			files = (
 				5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */,
 				5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */,
-				0E69A3132F79F5C4001FE064 /* BindManager.swift in Sources */,
 				5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */,
+				0EEB5A25303666A600ABA130 /* InfoButton.swift in Sources */,
 				E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */,
 				0E2B55192F804F4500904954 /* FontUI.swift in Sources */,
 				0E2B55252F8055C900904954 /* FormatUI.swift in Sources */,
 				0E972B3E2F85A93D00CC1031 /* BindTimeModel.swift in Sources */,
 				5C2793752F78717D006DDB32 /* TodayView.swift in Sources */,
-				E33E76682F3BC0E6008D27B5 /* BLEManager.swift in Sources */,
 				5CB017942F6CC14700D50145 /* MainTabView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

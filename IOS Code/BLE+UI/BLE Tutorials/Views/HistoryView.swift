@@ -75,6 +75,19 @@ struct HistoryView: View {
             .sorted { $0.day > $1.day }
     }
     
+    private var groupedByDaySortedForSelectedWeek: [(day: Date, sessions: [BindSession])] {
+        let filtered = bindSessionHistory.filter { session in
+            let day = calendar.startOfDay(for: session.startDate)
+            return selectedWeekRange.contains(day)
+        }
+        let grouped = Dictionary(grouping: filtered) { session in
+            calendar.startOfDay(for: session.startDate)
+        }
+        return grouped
+            .map { (day: $0.key, sessions: $0.value.sorted { $0.startDate > $1.startDate }) }
+            .sorted { $0.day > $1.day }
+    }
+    
     private var dayTotals: [DayTotal] {
         let grouped = Dictionary(grouping: bindSessionHistory) { session in
             calendar.startOfDay(for: session.startDate)
@@ -86,11 +99,10 @@ struct HistoryView: View {
             .sorted { $0.day < $1.day } // ascending for a left-to-right timeline
     }
     
-    // start of View --------------------------------------------
-    
     var body: some View {
             VStack{
-                // Top Header ----------------------
+                
+                // Top Header Section ---------------------------------
                 HStack{
                     Image("logo_solidOutline_coral")
                         .resizable()
@@ -102,8 +114,9 @@ struct HistoryView: View {
                 }
                 .padding(.top, 10)
                 
-                // Daily totals chart ----------------------------------
-                // buttons and week label at top of chart------
+                // Chart Section -------------------------------------
+                
+                // Label at top of chart (buttons and week selection)
                 HStack {
                     Button {
                         selectedDate = calendar.date(byAdding: .day, value: -7, to: selectedDate) ?? selectedDate
@@ -140,7 +153,7 @@ struct HistoryView: View {
                 }
                 .padding(.horizontal)
                 
-                // chart visual -------------
+                // Chart visual
                 Chart(weekTotals) { item in
                     BarMark(
                         x: .value("Day", item.day, unit: .day),
@@ -202,9 +215,9 @@ struct HistoryView: View {
                     .presentationDetents([.medium, .large])
                 }
                 
-                // History List ---------------------------
+                // History List -----------------------------------
                 List {
-                    ForEach(groupedByDaySorted, id: \.day) { dayGroup in
+                    ForEach(groupedByDaySortedForSelectedWeek, id: \.day) { dayGroup in
                         let totalSeconds = dayGroup.sessions.reduce(0) { $0 + $1.durationSeconds }
                         let isExpanded = Binding(
                             get: { expandedDays.contains(dayGroup.day) },
