@@ -24,6 +24,7 @@
 		5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793772F7871B6006DDB32 /* BindTimer.swift */; };
 		5C27937A2F7871E4006DDB32 /* BindTimerNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2793792F7871DC006DDB32 /* BindTimerNotification.swift */; };
 		5CB017942F6CC14700D50145 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB017932F6CC14700D50145 /* MainTabView.swift */; };
+		9A8218773037BBD700448824 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8218763037BBD700448824 /* SwiftUIView.swift */; };
 		E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */; };
 		E33E766B2F3BC0E6008D27B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E33E76612F3BC0E6008D27B5 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -58,6 +59,7 @@
 		5C2793772F7871B6006DDB32 /* BindTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimer.swift; sourceTree = "<group>"; };
 		5C2793792F7871DC006DDB32 /* BindTimerNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindTimerNotification.swift; sourceTree = "<group>"; };
 		5CB017932F6CC14700D50145 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		9A8218763037BBD700448824 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		E33E76612F3BC0E6008D27B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E33E76622F3BC0E6008D27B5 /* BLE_TutorialsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLE_TutorialsApp.swift; sourceTree = "<group>"; };
 		E3F9F86E2E9D591A00C7573A /* The Better Binder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Better Binder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -167,6 +169,15 @@
 			path = TimerLogic;
 			sourceTree = "<group>";
 		};
+		9A8218753037BB5800448824 /* History Views */ = {
+			isa = PBXGroup;
+			children = (
+				5C2793722F787149006DDB32 /* HistoryView.swift */,
+				9A8218763037BBD700448824 /* SwiftUIView.swift */,
+			);
+			path = "History Views";
+			sourceTree = "<group>";
+		};
 		E33E76662F3BC0E6008D27B5 /* BLE Tutorials */ = {
 			isa = PBXGroup;
 			children = (
@@ -185,10 +196,10 @@
 		E33E766C2F3BC0EA008D27B5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				9A8218753037BB5800448824 /* History Views */,
 				0E5AE45B2F7B40DE0087676E /* Journal Views */,
 				0E5AE45A2F7B40B40087676E /* Settings Views */,
 				5C2793742F78717A006DDB32 /* TodayView.swift */,
-				5C2793722F787149006DDB32 /* HistoryView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -366,6 +377,7 @@
 				0EEB5A25303666A600ABA130 /* InfoButton.swift in Sources */,
 				E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */,
 				0E2B55192F804F4500904954 /* FontUI.swift in Sources */,
+				9A8218773037BBD700448824 /* SwiftUIView.swift in Sources */,
 				0E2B55252F8055C900904954 /* FormatUI.swift in Sources */,
 				0E972B3E2F85A93D00CC1031 /* BindTimeModel.swift in Sources */,
 				5C2793752F78717D006DDB32 /* TodayView.swift in Sources */,
