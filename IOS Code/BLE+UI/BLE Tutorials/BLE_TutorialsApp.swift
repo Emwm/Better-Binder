@@ -17,7 +17,7 @@ struct BLE_TutorialsApp: App {
     @State private var bindTimer: BindTimer
     
     init() {
-        let safeContainer = try! ModelContainer(for: BindSession.self)
+        let safeContainer = try! ModelContainer(for: BindSession.self, DailyBindTotal.self)
         self.container = safeContainer
         
         //setup managers
@@ -33,8 +33,6 @@ struct BLE_TutorialsApp: App {
         _bindTimer = State(initialValue: initalizedTimer)
         _bsm = State(initialValue: initalizedBSM)
         _ble = State(initialValue: initalizedBLE)
-        
-        //container = try! ModelContainer(for: BindSession.self) // initialize persistant storage
     }
     
 

@@ -5,21 +5,22 @@ import SwiftData
 struct SavedJournalEntryView: View {
     let entry: JournalEntry
     
-    @Query private var sessionsForEntryDate: [BindSession]
+    @Query private var dailyTotal: [DailyBindTotal]
 
     init(entry: JournalEntry) {
         self.entry = entry
+
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: entry.date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-        let filter = #Predicate<BindSession> { session in
-            session.startDate >= startOfDay && session.startDate < endOfDay
+
+        let filter = #Predicate<DailyBindTotal> { total in
+            total.day == startOfDay
         }
-        _sessionsForEntryDate = Query(filter: filter)
+        _dailyTotal = Query(filter: filter)
     }
-    
+
     private var totalSecondsForDay: Int {
-        sessionsForEntryDate.reduce(0) { $0 + $1.durationSeconds }
+        dailyTotal.first?.totalSeconds ?? 0
     }
     private var totalTimeString: String {
         totalSecondsForDay.asTimestamp()

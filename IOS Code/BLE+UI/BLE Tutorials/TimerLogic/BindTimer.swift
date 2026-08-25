@@ -57,7 +57,7 @@ class BindTimer{
     // tracking variables (today)
     private var _secondsPassedToday: Int = 0
     private var _fractionPassedToday: Double = 0
-    private var _secondsPassedPreviouslyToday: Int = 0
+    private var _cachedTotalToday: Int = 0
     
     // tracking variables (this bind)
     private var _secondsPassedThisBind: Int = 0
@@ -65,11 +65,11 @@ class BindTimer{
     private var _numberOfNotificationsSent: Int = 0
     
     // limit variables (today)
-    private var _secondsBindLimit: TimeInterval = 60*60*6 // where 8 hour limit will go
+    private var _secondsBindLimit: TimeInterval = 60*60*8 // where 8 hour limit will go
     
     // limit variables (this bind)
     private var _notificationLimit: Int = 3
-    private var _secondsBetweenNotifications: TimeInterval = 60*30 // this value now for testing
+    private var _secondsBetweenNotifications: TimeInterval = 60*30
     
     // Initialize public properties (can access outside of this class) ---------------------------
     // this setup of public properties = private properties, allows private properties to be viewed but not changed outside of this class
@@ -118,19 +118,44 @@ class BindTimer{
             
             // recompute derived values
             _secondsPassedThisBind = Int(Date.now.timeIntervalSince(savedDate))
-            _secondsPassedPreviouslyToday = _totalSeconds(on: Date())
-            _secondsPassedToday = _secondsPassedThisBind + _secondsPassedPreviouslyToday
+            _cachedTotalToday = _calculateCachedTotalToday()
+            _secondsPassedToday = _secondsPassedThisBind + _cachedTotalToday
             _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
             
             // create the timer
             _createTimer()
         } else {
             _state = .idle // will this overide bind manager?
+            
+            // Preload for idle UI
+            _cachedTotalToday = _calculateCachedTotalToday()
+            _secondsPassedToday = _cachedTotalToday
+            _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
         }
     }
     
     // Public Methods (accessible outside of this class) --------------------------------------------
    
+    // updates the daily total binding time
+    func updateDailyTotal(for date: Date, adding seconds: Int) {
+        let day = Calendar.current.startOfDay(for: date)
+        let descriptor = FetchDescriptor<DailyBindTotal>(
+            predicate: #Predicate { $0.day == day }
+        )
+        do {
+            if let existing = try modelContext.fetch(descriptor).first {
+                existing.totalSeconds += seconds
+            } else {
+                let new = DailyBindTotal(day: day, totalSeconds: seconds)
+                modelContext.insert(new)
+            }
+            try modelContext.save()
+        } catch {
+            // handle errors appropriately (log, assert, etc.)
+            print("Failed to update daily total: \(error)")
+        }
+    }
+    
     // resets timer values and starts timer
     func start(){
         // track start of this bind
@@ -145,18 +170,24 @@ class BindTimer{
     
     // saves time passed this bind to bindsessionhistory model and stops timer
     func stop(){
-        // recalculate seconds passed this bind before saving, to ensure accuracy
+        // recalculate before saving, to ensure accuracy
         _secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
+        _cachedTotalToday += _secondsPassedThisBind
+        _secondsPassedToday = _cachedTotalToday
+        _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
         
         // only add to data set if it is greater than 2 seconds
         if _secondsPassedThisBind > 2 {
-            addBindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind)
+            addBindSession(startDate: _dateStartedThisBind, durationSeconds: _secondsPassedThisBind) //save this sessin to bindsession model
+            updateDailyTotal(for: _dateStartedThisBind, adding: _secondsPassedThisBind) //update todays bind total to dailytotal model
         }
 
         // stop timer
-        _secondsPassedThisBind = 0
         _state = .idle
         _killTimer()
+        
+        // reset this session
+        self._secondsPassedThisBind = 0
         
         // reset user defaults for persistance
         UserDefaults.standard.removeObject(forKey: kActiveBindStartDateKey)
@@ -180,16 +211,27 @@ class BindTimer{
         }
     }
     
-    func deleteBindSession(_ item: BindSession){
-        modelContext.delete(item) //remove from data model
-        do { // help it to prompt a save to data model
+    func deleteBindSession(_ item: BindSession) {
+        let duration = item.durationSeconds
+        let day = Calendar.current.startOfDay(for: item.startDate)
+
+        modelContext.delete(item)
+        do {
+            // Reduce the cached total for that day
+            let descriptor = FetchDescriptor<DailyBindTotal>(
+                predicate: #Predicate { $0.day == day }
+            )
+            if let existing = try modelContext.fetch(descriptor).first {
+                existing.totalSeconds = max(0, existing.totalSeconds - duration)
+            }
             try modelContext.save()
         } catch {
             print("Save failed: \(error)")
         }
-        // Recompute derived values...
-        self._secondsPassedPreviouslyToday = _totalSeconds(on: Date())
-        self._secondsPassedToday = self._secondsPassedThisBind + self._secondsPassedPreviouslyToday
+
+        // Update derived values for today
+        self._cachedTotalToday = _calculateCachedTotalToday()
+        self._secondsPassedToday = _cachedTotalToday + self._secondsPassedThisBind
         _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
     }
     
@@ -204,13 +246,11 @@ class BindTimer{
         
         // Ensure derived state is up to date before scheduling
         self._secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
-        self._secondsPassedPreviouslyToday = _totalSeconds(on: Date())
-        self._secondsPassedToday = self._secondsPassedThisBind + self._secondsPassedPreviouslyToday
+        self._secondsPassedToday = self._secondsPassedThisBind + _cachedTotalToday
         _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
 
         BindTimerNotification.cancelScheduledLimitNotifications() // cancel old notifications
         _scheduleLimitNotifications() //schedule new notifications
-        
     }
     
     // if a timer exists it gets rid of it and kills notifications
@@ -223,73 +263,34 @@ class BindTimer{
     // updates private variables every tick
     private func _onTick(){
         self._secondsPassedThisBind = Int(Date.now.timeIntervalSince(self._dateStartedThisBind))
-        self._secondsPassedPreviouslyToday = _totalSeconds(on: Date())
-        self._secondsPassedToday = self._secondsPassedThisBind + self._secondsPassedPreviouslyToday
+        self._secondsPassedToday = self._secondsPassedThisBind + _cachedTotalToday
         
         // update fraction
         _fractionPassedToday = min(1, max(0, TimeInterval(_secondsPassedToday) / _secondsBindLimit))
     }
     
-    // Your function now lives inside the class and queries the persistent storage
-    private func _totalSeconds(on day: Date) -> Int {
-        let cal = Calendar.current
-        let startOfDay = cal.startOfDay(for: day)
-        let endOfDay = cal.date(byAdding: .day, value: 1, to: startOfDay)!
-        
-        // Fetch sessions specifically for this day from the database
-        let predicate = #Predicate<BindSession> {
-            $0.startDate >= startOfDay && $0.startDate < endOfDay
-        }
-        
-        let descriptor = FetchDescriptor<BindSession>(predicate: predicate)
-        
-        do {
-            let dailySessions = try modelContext.fetch(descriptor)
-            return dailySessions.reduce(0) { $0 + $1.durationSeconds }
-        } catch {
-            print("Fetch failed: \(error)")
-            return 0
-        }
-    }
+//    // queries the bindsession model and calculates total seconds binded for that day
+//    private func _totalSeconds(on day: Date) -> Int {
+//        let cal = Calendar.current
+//        let startOfDay = cal.startOfDay(for: day)
+//        let endOfDay = cal.date(byAdding: .day, value: 1, to: startOfDay)!
+//        
+//        // Fetch sessions specifically for this day from the database
+//        let predicate = #Predicate<BindSession> {
+//            $0.startDate >= startOfDay && $0.startDate < endOfDay
+//        }
+//        
+//        let descriptor = FetchDescriptor<BindSession>(predicate: predicate)
+//        
+//        do {
+//            let dailySessions = try modelContext.fetch(descriptor)
+//            return dailySessions.reduce(0) { $0 + $1.durationSeconds }
+//        } catch {
+//            print("Fetch failed: \(error)")
+//            return 0
+//        }
+//    }
     
-    // old
-    private func _seedDataIfNeeded(context: ModelContext) {
-        // 1. Check if we already have data
-        let descriptor = FetchDescriptor<BindSession>()
-        let existingCount = (try? context.fetchCount(descriptor)) ?? 0
-        
-        // 2. Only proceed if the database is empty
-        guard existingCount == 0 else {
-            print("Database already has data. Skipping seed.")
-            return
-        }
-        
-        // 3. Your existing JSON logic
-        guard let url = Bundle.main.url(forResource: "generatedBindData", withExtension: "json"),
-              let data = try? Data(contentsOf: url) else { return }
-        
-        do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let decodedDTOs = try decoder.decode([BindSessionDTO].self, from: data)
-            
-            // 4. Map and Insert into the context
-            for dto in decodedDTOs {
-                let newSession = BindSession(
-                    startDate: dto.startDate,
-                    durationSeconds: dto.durationSeconds
-                )
-                context.insert(newSession)
-            }
-            
-            // 5. Save the changes to the phone's disk
-            try context.save()
-            print("Successfully seeded \(decodedDTOs.count) sessions.")
-            
-        } catch {
-            print("Seeding failed: \(error)")
-        }
-    }
     
     private func _scheduleLimitNotifications() {
         // Always compute fresh ‘secondsLeftToday’ based on current derived state
@@ -336,47 +337,76 @@ class BindTimer{
             )
         }
     }
+    
+    //
+    private func _calculateCachedTotalToday() -> Int {
+        let day = Calendar.current.startOfDay(for: Date())
+        let descriptor = FetchDescriptor<DailyBindTotal>(
+            predicate: #Predicate { $0.day == day }
+        )
+        do {
+            return try modelContext.fetch(descriptor).first?.totalSeconds ?? 0
+        } catch {
+            print("Failed to read DailyBindTotal: \(error)")
+            return 0
+        }
+    }
 }
 
-//private struct BindTimerKey: EnvironmentKey {
-//    static let defaultValue = BindTimer()
-//}
-//
-//extension EnvironmentValues {
-//    var bindTimer: BindTimer {
-//        get { self[BindTimerKey.self] }
-//        set { self[BindTimerKey.self] = newValue }
-//    }
-//}
+    // seed the generated data
+    private func _seedDataIfNeeded(context: ModelContext) {
+        // 1. Check if we already have data
+        let sessionDescriptor = FetchDescriptor<BindSession>()
+        let existingCount = (try? context.fetchCount(sessionDescriptor)) ?? 0
+        guard existingCount == 0 else {
+            print("Database already has data. Skipping seed.")
+            return
+        }
 
-// old
-//extension BindTimer {
-//    // Creates `days` days of fake sessions before today.
-//    // Each day gets `sessionsPerDay` sessions with random durations.
-//    func seedFakeHistory(days: Int = 7, sessionsPerDay: Int = 2, durationRange: ClosedRange<Int> = 5...1800) {
-//        let calendar = Calendar.current
-//        let now = Date()
-//
-//        for dayOffset in 1...days {
-//            // Target date is N days before today
-//            guard let day = calendar.date(byAdding: .day, value: -dayOffset, to: now) else { continue }
-//            let startOfDay = calendar.startOfDay(for: day)
-//
-//            for s in 0..<sessionsPerDay {
-//                // Stagger start times within the day (e.g., morning & afternoon)
-//                let hour = s == 0 ? 9 : 15 // 9 AM and 3 PM
-//                var components = calendar.dateComponents([.year, .month, .day], from: startOfDay)
-//                components.hour = hour
-//                components.minute = Int.random(in: 0..<60)
-//                components.second = Int.random(in: 0..<60)
-//
-//                let startDate = calendar.date(from: components) ?? startOfDay
-//                let duration = Int.random(in: durationRange)
-//
-//                _bindSessionHistory.append(
-//                    BindSession(startDate: startDate, durationSeconds: duration)
-//                )
-//            }
-//        }
-//    }
-//}
+        // 2. Load your JSON
+        guard let url = Bundle.main.url(forResource: "generatedBindData", withExtension: "json"),
+              let data = try? Data(contentsOf: url) else {
+            print("No generatedBindData.json found or unreadable.")
+            return
+        }
+
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let decodedDTOs = try decoder.decode([BindSessionDTO].self, from: data)
+
+            // 3. Insert sessions and accumulate daily totals
+            let cal = Calendar.current
+            var dayTotals: [Date: Int] = [:] // startOfDay -> totalSeconds
+
+            for dto in decodedDTOs {
+                // Insert BindSession
+                let newSession = BindSession(startDate: dto.startDate, durationSeconds: dto.durationSeconds)
+                context.insert(newSession)
+
+                // Accumulate into dayTotals
+                let day = cal.startOfDay(for: dto.startDate)
+                dayTotals[day, default: 0] += dto.durationSeconds
+            }
+
+            // 4. Upsert DailyBindTotal for each day
+            for (day, total) in dayTotals {
+                let totalDescriptor = FetchDescriptor<DailyBindTotal>(
+                    predicate: #Predicate { $0.day == day }
+                )
+                if let existing = try context.fetch(totalDescriptor).first {
+                    existing.totalSeconds += total
+                } else {
+                    let newDaily = DailyBindTotal(day: day, totalSeconds: total)
+                    context.insert(newDaily)
+                }
+            }
+
+            // 5. Save once at the end
+            try context.save()
+            print("Successfully seeded \(decodedDTOs.count) sessions and updated \(dayTotals.count) daily totals.")
+
+        } catch {
+            print("Seeding failed: \(error)")
+        }
+    }

@@ -1,5 +1,5 @@
 //
-//  BindTimeModel.swift
+//  BindSessionModel.swift
 //  BLE Tutorials
 //
 //  Created by Reese Brogden on 4/7/26.
