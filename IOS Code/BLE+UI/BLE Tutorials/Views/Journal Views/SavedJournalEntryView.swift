@@ -5,15 +5,15 @@ import SwiftData
 struct SavedJournalEntryView: View {
     let entry: JournalEntry
     
-    @Query private var dailyTotal: [DailyBindTotal]
+    @Query private var dailyTotal: [DailyTotal]
 
     init(entry: JournalEntry) {
         self.entry = entry
 
         let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: entry.date)
+        let startOfDay = calendar.startOfDay(for: entry.timestamp)
 
-        let filter = #Predicate<DailyBindTotal> { total in
+        let filter = #Predicate<DailyTotal> { total in
             total.day == startOfDay
         }
         _dailyTotal = Query(filter: filter)
@@ -30,7 +30,7 @@ struct SavedJournalEntryView: View {
         ScrollView {
             VStack {
                 // Header
-                Text(entry.date.formatted(date: .abbreviated, time: .shortened))
+                Text(entry.timestamp.formatted(date: Date.FormatStyle.DateStyle.abbreviated, time: Date.FormatStyle.TimeStyle.shortened))
                     .font(.appSubHeader())
                     .mediumPaddingBottom()
                     .mediumPaddingTop()
@@ -84,8 +84,4 @@ struct SavedJournalEntryView: View {
             .padding(.horizontal)
         }
     }
-}
-
-#Preview {
-    SavedJournalEntryView(entry: JournalEntry(text: "Sample notes...", date: .now, physicalWellness: 7, mentalWellness: 6))
 }

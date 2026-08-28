@@ -7,9 +7,11 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 struct JournalView: View {
-    @State private var allEntries: [JournalEntry] = []
+    @Query(sort: \JournalEntry.timestamp, order: .reverse)
+    private var allEntries: [JournalEntry]
     @State private var isShowingEditor = false
 
     var body: some View {
@@ -49,12 +51,12 @@ struct JournalView: View {
                 Text("Previous Entries:")
                     .font(.appBodyBold())
             }
-            List(allEntries.sorted(by: { $0.date > $1.date })) { entry in
+            List(allEntries) { entry in
                 NavigationLink {
                     SavedJournalEntryView(entry: entry)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(entry.date.formatted(date: .abbreviated, time: .shortened))
+                        Text(entry.timestamp.formatted(date: Date.FormatStyle.DateStyle.abbreviated, time: Date.FormatStyle.TimeStyle.shortened))
                             .font(.appBody())
                         Text("Physical: \(Int(entry.physicalWellness)) / 10   |   Emotional: \(Int(entry.mentalWellness)) / 10")
                             .font(.appSmallCaption())
@@ -69,11 +71,18 @@ struct JournalView: View {
                 }
             }
             .sheet(isPresented: $isShowingEditor) {
-                NewEntryView(entries: $allEntries)
+                NewEntryView(entries: .constant([]))
             }
         }
     }
 }
 #Preview{
-    JournalView()
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: JournalEntry.self, configurations: config)
+        return JournalView()
+            .modelContainer(container)
+    } catch {
+        return JournalView()
+    }
 }

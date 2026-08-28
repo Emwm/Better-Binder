@@ -22,7 +22,7 @@ struct WeekView: View {
     
     @Query(sort: \BindSession.startDate, order: .reverse) var bindSessionHistory: [BindSession] // load all bind sessions for the week into an array
     
-    @Query(sort: \DailyBindTotal.day, order: .forward) private var allDailyTotals: [DailyBindTotal] // load all daily bind totals for the week into an array
+    @Query(sort: \DailyTotal.day, order: .forward) private var allDailyTotals: [DailyTotal] // load all daily bind totals for the week into an array
     
     // state variables for controlling chart view
     @State private var expandedDays: Set<Date> = []
@@ -263,7 +263,7 @@ struct WeekView: View {
 #Preview {
     // 1. Create an in-memory container (clears every time the preview restarts)
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: BindSession.self, DailyBindTotal.self, configurations: config)
+    let container = try! ModelContainer(for: BindSession.self, DailyTotal.self, configurations: config)
     
     // 3. Initialize the manager with the mock context
     let mockManager = BindTimer(modelContext: container.mainContext)

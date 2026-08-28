@@ -45,7 +45,7 @@ struct MainTabView: View {
 
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: BindSession.self, DailyBindTotal.self, configurations: config)
+    let container = try! ModelContainer(for: BindSession.self, DailyTotal.self, JournalEntry.self, configurations: config)
     
     MainTabView()
         .environment(BLEManager.mock)

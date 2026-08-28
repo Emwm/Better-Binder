@@ -17,7 +17,7 @@ struct BLE_TutorialsApp: App {
     @State private var bindTimer: BindTimer
     
     init() {
-        let safeContainer = try! ModelContainer(for: BindSession.self, DailyBindTotal.self)
+        let safeContainer = try! ModelContainer(for: BindSession.self, DailyTotal.self)
         self.container = safeContainer
         
         //setup managers

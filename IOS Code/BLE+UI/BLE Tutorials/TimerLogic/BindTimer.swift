@@ -139,14 +139,14 @@ class BindTimer{
     // updates the daily total binding time
     func updateDailyTotal(for date: Date, adding seconds: Int) {
         let day = Calendar.current.startOfDay(for: date)
-        let descriptor = FetchDescriptor<DailyBindTotal>(
+        let descriptor = FetchDescriptor<DailyTotal>(
             predicate: #Predicate { $0.day == day }
         )
         do {
             if let existing = try modelContext.fetch(descriptor).first {
                 existing.totalSeconds += seconds
             } else {
-                let new = DailyBindTotal(day: day, totalSeconds: seconds)
+                let new = DailyTotal(day: day, totalSeconds: seconds)
                 modelContext.insert(new)
             }
             try modelContext.save()
@@ -218,7 +218,7 @@ class BindTimer{
         modelContext.delete(item)
         do {
             // Reduce the cached total for that day
-            let descriptor = FetchDescriptor<DailyBindTotal>(
+            let descriptor = FetchDescriptor<DailyTotal>(
                 predicate: #Predicate { $0.day == day }
             )
             if let existing = try modelContext.fetch(descriptor).first {
@@ -341,13 +341,13 @@ class BindTimer{
     //
     private func _calculateCachedTotalToday() -> Int {
         let day = Calendar.current.startOfDay(for: Date())
-        let descriptor = FetchDescriptor<DailyBindTotal>(
+        let descriptor = FetchDescriptor<DailyTotal>(
             predicate: #Predicate { $0.day == day }
         )
         do {
             return try modelContext.fetch(descriptor).first?.totalSeconds ?? 0
         } catch {
-            print("Failed to read DailyBindTotal: \(error)")
+            print("Failed to read DailyTotal: \(error)")
             return 0
         }
     }
@@ -389,15 +389,15 @@ class BindTimer{
                 dayTotals[day, default: 0] += dto.durationSeconds
             }
 
-            // 4. Upsert DailyBindTotal for each day
+            // 4. Upsert DailyTotal for each day
             for (day, total) in dayTotals {
-                let totalDescriptor = FetchDescriptor<DailyBindTotal>(
+                let totalDescriptor = FetchDescriptor<DailyTotal>(
                     predicate: #Predicate { $0.day == day }
                 )
                 if let existing = try context.fetch(totalDescriptor).first {
                     existing.totalSeconds += total
                 } else {
-                    let newDaily = DailyBindTotal(day: day, totalSeconds: total)
+                    let newDaily = DailyTotal(day: day, totalSeconds: total)
                     context.insert(newDaily)
                 }
             }
