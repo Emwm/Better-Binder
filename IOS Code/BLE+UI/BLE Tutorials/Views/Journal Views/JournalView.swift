@@ -37,17 +37,6 @@ struct JournalView: View {
                 .padding(.horizontal)
                 .mediumPaddingBottom()
                 
-                NavigationLink {
-                    JournalVisualHistoryView()
-                } label: {
-                    HStack {
-                        Text("Visual History")
-                            .font(.appBodyBold())
-                        Image(systemName: "chevron.right")
-                    }
-                }
-                .mediumPaddingBottom()
-                
                 Text("Previous Entries:")
                     .font(.appBodyBold())
             }

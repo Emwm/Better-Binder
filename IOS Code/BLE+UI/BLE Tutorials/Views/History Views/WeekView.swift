@@ -100,16 +100,16 @@ struct WeekView: View {
             VStack{
                 
                 // Top Header Section ---------------------------------
-                HStack{
-                    Image("logo_solidOutline_coral")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 50, height: 50)
-                    Text("History") // list view of each bind today
-                        .font(.appHeader())
-                        .foregroundStyle(Color.colorDarkCoral)
-                }
-                .padding(.top, 10)
+//                HStack{
+//                    Image("logo_solidOutline_coral")
+//                        .resizable()
+//                        .scaledToFit()
+//                        .frame(width: 50, height: 50)
+//                    Text("Week View") // list view of each bind today
+//                        .font(.appHeader())
+//                        .foregroundStyle(Color.colorDarkCoral)
+//                }
+//                .padding(.top, 5)
                 
                 // Chart Section -------------------------------------
                 
@@ -260,14 +260,14 @@ struct WeekView: View {
             }
         }
 }
+
+
 #Preview {
-    // 1. Create an in-memory container (clears every time the preview restarts)
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: BindSession.self, DailyTotal.self, configurations: config)
-    
-    // 3. Initialize the manager with the mock context
-    let mockManager = BindTimer(modelContext: container.mainContext)
+    let container = try! ModelContainer(for: BindSession.self, DailyTotal.self, JournalEntry.self, configurations: config)
     
     WeekView()
-        .environment(mockManager)
+        .environment(BindTimer(modelContext: container.mainContext))
+        .modelContainer(container)
+        .environment(BindManager())
 }

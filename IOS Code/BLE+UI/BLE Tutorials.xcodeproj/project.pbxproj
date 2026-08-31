@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0E1DDDD2303E23FE00B128CC /* WeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1DDDD1303E23E200B128CC /* WeekView.swift */; };
-		0E1DDDD8303E263600B128CC /* TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1DDDD7303E263300B128CC /* TableView.swift */; };
+		0E1DDDD8303E263600B128CC /* MonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1DDDD7303E263300B128CC /* MonthView.swift */; };
 		0E2B55192F804F4500904954 /* FontUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B55182F804F2D00904954 /* FontUI.swift */; };
 		0E2B551C2F804F6D00904954 /* Cabin-VariableFont_wdth,wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0E2B551B2F804F6D00904954 /* Cabin-VariableFont_wdth,wght.ttf */; };
 		0E2B551D2F804F6D00904954 /* Cabin-Italic-VariableFont_wdth,wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0E2B551A2F804F6D00904954 /* Cabin-Italic-VariableFont_wdth,wght.ttf */; };
@@ -49,7 +49,7 @@
 
 /* Begin PBXFileReference section */
 		0E1DDDD1303E23E200B128CC /* WeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekView.swift; sourceTree = "<group>"; };
-		0E1DDDD7303E263300B128CC /* TableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableView.swift; sourceTree = "<group>"; };
+		0E1DDDD7303E263300B128CC /* MonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthView.swift; sourceTree = "<group>"; };
 		0E2B55182F804F2D00904954 /* FontUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontUI.swift; sourceTree = "<group>"; };
 		0E2B551A2F804F6D00904954 /* Cabin-Italic-VariableFont_wdth,wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cabin-Italic-VariableFont_wdth,wght.ttf"; sourceTree = "<group>"; };
 		0E2B551B2F804F6D00904954 /* Cabin-VariableFont_wdth,wght.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cabin-VariableFont_wdth,wght.ttf"; sourceTree = "<group>"; };
@@ -178,9 +178,9 @@
 		9A8218753037BB5800448824 /* History Views */ = {
 			isa = PBXGroup;
 			children = (
-				0E1DDDD7303E263300B128CC /* TableView.swift */,
-				0E1DDDD1303E23E200B128CC /* WeekView.swift */,
 				5C2793722F787149006DDB32 /* HistoryView.swift */,
+				0E1DDDD7303E263300B128CC /* MonthView.swift */,
+				0E1DDDD1303E23E200B128CC /* WeekView.swift */,
 				9A8218763037BBD700448824 /* YearView.swift */,
 			);
 			path = "History Views";
@@ -385,7 +385,7 @@
 				5C2793782F7871BC006DDB32 /* BindTimer.swift in Sources */,
 				5C2793732F78715A006DDB32 /* HistoryView.swift in Sources */,
 				0EEB5A25303666A600ABA130 /* InfoButton.swift in Sources */,
-				0E1DDDD8303E263600B128CC /* TableView.swift in Sources */,
+				0E1DDDD8303E263600B128CC /* MonthView.swift in Sources */,
 				E33E76672F3BC0E6008D27B5 /* BLE_TutorialsApp.swift in Sources */,
 				0E2B55192F804F4500904954 /* FontUI.swift in Sources */,
 				9A8218773037BBD700448824 /* YearView.swift in Sources */,

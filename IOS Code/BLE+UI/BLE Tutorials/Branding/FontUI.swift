@@ -39,4 +39,16 @@ extension Font {
     static func appSmallCaptionBold() -> Font {
         return .custom("Cabin-Regular_Bold", size: 15, relativeTo: .caption)
     }
+    
+    static func appTableHeader() -> Font {
+        return .custom("Cabin-Regular_Bold", size: 18, relativeTo: .body)
+    }
+    
+    static func appTableBody() -> Font {
+        return .custom("Cabin-Regular", size: 16, relativeTo: .body)
+    }
+    
+    static func appYearView() -> Font {
+        return .custom("Cabin-Regular", size: 12, relativeTo: .body)
+    }
 }

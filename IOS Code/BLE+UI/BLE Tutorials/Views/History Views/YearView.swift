@@ -30,15 +30,17 @@ struct YearView: View {
     var body: some View {
         VStack {
             
-            HStack{
-                Image("logo_solidOutline_coral")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 50, height: 50)
-                Text("Yearly Trend") // list view of each bind today
-                    .font(.appHeader())
-                    .foregroundStyle(Color.colorDarkCoral)
-            }
+//            // Top Header Section ---------------------------------
+//            HStack{
+//                Image("logo_solidOutline_coral")
+//                    .resizable()
+//                    .scaledToFit()
+//                    .frame(width: 50, height: 50)
+//                Text("Yearly Trend") // list view of each bind today
+//                    .font(.appHeader())
+//                    .foregroundStyle(Color.colorDarkCoral)
+//            }
+//            .padding(.top, 5)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 4){
@@ -47,7 +49,7 @@ struct YearView: View {
                             
                             //Month label
                             Text(trailingMonths[monthIndex].formatted(.dateTime.month(.abbreviated)))
-                                .font(.caption)
+                                .font(.appYearView())
                                 .foregroundColor(.secondary)
                             
                             ForEach(0..<31, id: \.self) { dayIndex in
@@ -68,6 +70,8 @@ struct YearView: View {
                     dataFill()
                 }
             }
+            
+            Spacer() // pushes ui to top
         }
 
     }

@@ -8,51 +8,84 @@ struct HistoryView: View {
     enum Tab {
         case weekview
         case yearview
-        case tableview
+        case monthview
     }
     
     @State private var selectedTab: Tab = .weekview
     
+    private func tabButton(_ title: String, tab: Tab) -> some View {
+        Button {
+            selectedTab = tab
+        } label: {
+            Text(title)
+                .font(selectedTab == tab ? .appBodyBold() : .appBody())
+                .foregroundStyle(selectedTab == tab ? .white : .primary)
+                .frame(maxWidth: 80)
+                .padding(.vertical, 5)
+                .background(
+                    selectedTab == tab ? Color.colorCoral : Color.colorLightCoral
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+    
     var body: some View {
-        VStack(spacing: 0) {
-
-            
-            Picker("History View", selection: $selectedTab) {
-                Text("Week")
-                    .tag(Tab.weekview)
-                
-                Text("Year")
-                    .tag(Tab.yearview)
-                
-                Text("Table")
-                    .tag(Tab.tableview)
+        VStack {
+            // Top Header Section ---------------------------------
+            HStack{
+                Image("logo_solidOutline_coral")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50, height: 50)
+                Text("History") // list view of each bind today
+                    .font(.appHeader())
+                    .foregroundStyle(Color.colorDarkCoral)
             }
-            .pickerStyle(.segmented)
-            .padding()
+            .padding(.top, 10)
+            
+            HStack(spacing: 10) {
+                tabButton("Week", tab: .weekview)
+                tabButton("Month", tab: .monthview)
+                tabButton("Year", tab: .yearview)
+            }
+            .mediumPaddingBottom()
             
             
+            
+//            Picker("History View", selection: $selectedTab) {
+//                Text("Week")
+//                    .tag(Tab.weekview)
+//                
+//                Text("Month")
+//                    .tag(Tab.monthview)
+//                
+//                Text("Year")
+//                    .tag(Tab.yearview)
+//            }
+//            .pickerStyle(.segmented)
+//            .font(.appBodyBold())
+//            .padding()
+//            
             switch selectedTab {
             case .weekview:
                 WeekView()
                 
+            case .monthview:
+                MonthView()
+                
             case .yearview:
                 YearView()
-                
-            case .tableview:
-                TableView()
             }
         }
     }
 }
 
 #Preview {
-    // 1. Create an in-memory container (clears every time the preview restarts)
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: BindSession.self, DailyTotal.self, configurations: config)
-    
-    // 3. Initialize the manager with the mock context
-    let mockManager = BindTimer(modelContext: container.mainContext)
+    let container = try! ModelContainer(for: BindSession.self, DailyTotal.self, JournalEntry.self, configurations: config)
     
     HistoryView()
-        .environment(mockManager)
+        .environment(BindTimer(modelContext: container.mainContext))
+        .modelContainer(container)
+        .environment(BindManager())
 }
