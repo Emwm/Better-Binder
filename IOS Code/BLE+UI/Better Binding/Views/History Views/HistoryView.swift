@@ -40,6 +40,106 @@ struct HistoryView: View {
                 Text("History") // list view of each bind today
                     .font(.appHeader())
                     .foregroundStyle(Color.colorDarkCoral)
+                InfoButton(title: "History Page Help", tint: .colorCoral) {
+                    VStack {
+                        Text("Page Overview:")
+                            .font(.appBodyBold())
+                        Text("This page offers three distinct views to track binding habits and wellness. View trends across a week, a month, or a year.")
+                            .font(.appBody())
+                            .mediumPaddingBottom()
+                        
+                        TabView{
+                            //Tab 1
+                            VStack{
+                                Text("Week View")
+                                    .font(.appBodyBold())
+                                Text("On this page see:")
+                                    .font(.appBody())
+                                    .smallPaddingBottom()
+                                // manual list
+                                VStack(alignment: .leading) {
+                                    Label("Total binding time for each day of the week, tap on the arrows to see a different week", systemImage: "1.circle")
+                                        .smallPaddingBottom()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(.leading)
+                                    
+                                    Label("How close you've been to your limit every day", systemImage: "2.circle")
+                                        .smallPaddingBottom()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(.leading)
+                                    
+                                    Label("All of the binding sessions and this dates from the past week", systemImage: "3.circle")
+                                        .smallPaddingBottom()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .font(.appSmallCaption())
+                                .mediumPaddingBottom()
+                                
+                                Spacer()
+                            }
+                            //Tab 2
+                            VStack{
+                                Text("Month View")
+                                    .font(.appBodyBold())
+                                Text("On this page see:")
+                                    .font(.appBody())
+                                    .smallPaddingBottom()
+                                
+                                // manual list
+                                VStack(alignment: .leading) {
+                                    Label("A table with the past month of binding time and wellness scores, tap the arrows to see past months", systemImage: "1.circle")
+                                        .smallPaddingBottom()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(.leading)
+                                    
+                                    Label("Highlighted entries indicate days where the set limit has been exceeded", systemImage: "2.circle")
+                                        .smallPaddingBottom()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(.leading)
+                                    
+                                }
+                                .font(.appSmallCaption())
+                                .mediumPaddingBottom()
+                                
+                                Spacer()
+                                
+                                
+                            }
+                            //Tab 3
+                            VStack{
+                                Text("Year View")
+                                    .font(.appBodyBold())
+                                Text("On this page see:")
+                                VStack(alignment: .leading) {
+                                    Label("12 Columns representing months and 31 boxes below them representing the days. Tap on the arrows to see previous years", systemImage: "1.circle")
+                                        .smallPaddingBottom()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(.leading)
+                                    
+                                    Label("Days where you wore a binder have been highlighted, days where your limit was exceeded have been filled", systemImage: "2.circle")
+                                        .smallPaddingBottom()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .multilineTextAlignment(.leading)
+                                    
+                                }
+                                .font(.appSmallCaption())
+                                .mediumPaddingBottom()
+                                
+                                Spacer()
+                                
+                            }
+                        }
+                        //prevents the gross wide bar and makes it look like instagram slides
+                        .tabViewStyle(.page)
+                        .indexViewStyle(.page(backgroundDisplayMode: .always))
+                        .frame(height: 250)
+                    
+                    }
+                }
+
+                
+                
             }
             .padding(.top, 10)
             

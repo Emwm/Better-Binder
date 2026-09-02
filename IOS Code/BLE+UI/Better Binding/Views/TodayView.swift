@@ -64,7 +64,7 @@ struct TodayView: View {
     //changable var for timer button
     @State private var buttonState = false
     
-    //state vars for information pop ups (so they act as buttons)
+    //state vars for information pop ups (so they act as buttons) do we need these still?
     @State private var showTotalTimeTodayInfo = false
     @State private var showTimerInfo = false
     @State private var showPreviousSessionsInfo = false

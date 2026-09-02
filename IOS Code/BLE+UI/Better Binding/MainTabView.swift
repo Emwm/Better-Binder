@@ -9,6 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct MainTabView: View {
+    
+    @AppStorage("isFirstLaunch") private var isFirstLaunch: Bool = true
         
     @State private var selectedTab = 0
     
@@ -39,6 +41,9 @@ struct MainTabView: View {
         //global binding updates, important
         .onChange(of: ble.statusInt) { oldValue, newValue in
             bsm.setRawInt(for: newValue, timer: timer)
+        }
+        .sheet(isPresented: $isFirstLaunch) {
+            OnboardingView(isFirstLaunch: $isFirstLaunch)
         }
     }
 }
