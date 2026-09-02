@@ -14,21 +14,69 @@ struct YearView: View {
     
     @Environment(BindTimer.self) private var timer
     
+    @State private var yearOffset: Int = 0 //needed for prev year
     @State private var gridData: [[Color]] = Array(
         repeating: Array(repeating: Color.gray.opacity(0.2), count: 31),
         count: 12
     )
     
+    //changes first date to subtract year offset
+    private var referenceDate: Date {
+        Calendar.current.date(byAdding: .year, value: yearOffset, to: Date()) ?? Date()
+    }
+    
     //creating a dynamic variable that puts the current month first, making display easier
     private var trailingMonths: [Date] {
         let cal = Calendar.current
-        let today = Date()
-        return (0..<12).reversed().compactMap { offset in cal.date(byAdding: .month, value: -offset, to: today)
+        return (0..<12).reversed().compactMap { offset in cal.date(byAdding: .month, value: -offset, to: referenceDate)
         }
+    }
+    //func for year text that can change
+    private var titleText: String {
+        guard let first = trailingMonths.first, let last = trailingMonths.last else { return "" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM yyy"
+        return "\(formatter.string(from: first)) - \(formatter.string(from: last))"
     }
     
     var body: some View {
         VStack {
+            HStack(spacing: 20){
+                Button(action: {yearOffset -= 1}) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                        .foregroundStyle(.white)
+                }
+                Text(titleText)
+                    .font(.appBodyBold())
+                    .foregroundStyle(.white)
+                
+                Button(action: {yearOffset += 1}) {
+                    Image(systemName: "chevron.right")
+                        .font(.title2)
+                        .foregroundStyle(.white)
+                }
+                // no clicking into the future
+                    .disabled(yearOffset >= 0)
+                    .opacity(yearOffset >= 0 ? 0.3 : 1.0)
+            }
+            /*.padding(.top, 5)
+            .padding(.bottom, 5)*/
+            
+            .padding(.vertical, 10)
+            .padding(.horizontal, 20)
+
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.colorCoral.opacity(1))
+            )
+            /*
+            .frame(maxWidth: .infinity)
+            .background(Color.colorCoral.opacity(0.5))
+            */
+            //code to add a coloured background behind the date, might remove or repurpose bc it kinda looks weird, would be better with a square?
+
+
             
 //            // Top Header Section ---------------------------------
 //            HStack{
@@ -43,7 +91,7 @@ struct YearView: View {
 //            .padding(.top, 5)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 4){
+                HStack(alignment: .top, spacing: 3){
                     ForEach(0..<12, id: \.self) { monthIndex in
                         VStack(spacing: 3) {
                             
@@ -55,35 +103,35 @@ struct YearView: View {
                             ForEach(0..<31, id: \.self) { dayIndex in
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(gridData[monthIndex][dayIndex])
-                                    .frame(width:15, height:15)
+                                    .frame(width:14, height:14)
                                 
                             }
                             
                         }
-                        
-                        
-                        
+
                     }
                 }
                 .containerRelativeFrame(.horizontal)
                 .onAppear(){
                     dataFill()
                 }
+                .onChange(of: yearOffset) { _, _ in
+                    dataFill()
+                }
             }
             
-            Spacer() // pushes ui to top
+            Spacer()
         }
 
     }
     
     private func dataFill() {
         let cal = Calendar.current
-        let today = Date()
-        guard let currentMonthStart = cal.date(from: cal.dateComponents([.year, .month], from: today)) else { return }
+        guard let currentMonthStart = cal.date(from: cal.dateComponents([.year, .month], from: referenceDate)) else { return }
         
         //grid with preset defaults in case real data doesn't exist
         var tempGrid = Array(repeating: Array(repeating: Color.gray.opacity(0.2), count: 31), count: 12)
-        var limit = timer.secondsBindLimit //self explanatory, from timer manager
+        let limit = timer.secondsBindLimit //self explanatory, from timer manager
         
         for entry in historicalDays {
             let entryDate = entry.day

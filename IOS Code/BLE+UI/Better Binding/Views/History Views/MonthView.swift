@@ -112,7 +112,7 @@ struct MonthView: View {
                 Spacer()
                 
                 Text(selectedMonth.formatted(.dateTime.month(.wide).year()))
-                    .font(.headline)
+                    .font(.appBodyBold())
                     .onTapGesture { showingMonthPicker = true }
                 
                 Spacer()
